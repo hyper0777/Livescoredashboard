@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { MatchCard } from "./MatchCard";
 import { Match } from "../data/mockData";
-import { Calendar, Clock, AlertCircle } from "lucide-react";
+import { Calendar, Clock, AlertCircle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useMatches } from "../hooks/useMatches";
 
 export function LiveScores() {
-  const { matches, loading, error } = useMatches();
+  const { matches, loading, error, useMockData } = useMatches();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -45,8 +45,18 @@ export function LiveScores() {
         </div>
       </div>
 
+      {/* Demo Mode Alert */}
+      {useMockData && (
+        <Alert className="mb-6 bg-blue-900/20 border-blue-900">
+          <Info className="h-4 w-4 text-blue-500" />
+          <AlertDescription className="text-blue-400">
+            Showing demo matches. Live API data will appear once the backend is configured.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Error Alert */}
-      {error && (
+      {error && !useMockData && (
         <Alert className="mb-6 bg-red-900/20 border-red-900">
           <AlertCircle className="h-4 w-4 text-red-500" />
           <AlertDescription className="text-red-400">
