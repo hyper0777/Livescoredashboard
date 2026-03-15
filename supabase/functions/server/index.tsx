@@ -24,6 +24,15 @@ app.get("/make-server-ed1dd9fb/health", (c) => {
   return c.json({ status: "ok" });
 });
 
+// Test endpoint to verify API key is set
+app.get("/make-server-ed1dd9fb/test-api", (c) => {
+  const apiKey = Deno.env.get("RAPIDAPI_KEY");
+  return c.json({ 
+    apiKeySet: !!apiKey,
+    apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + "..." : "not set"
+  });
+});
+
 // Fetch live matches from AllSportsAPI
 app.get("/make-server-ed1dd9fb/matches/live", async (c) => {
   try {
@@ -34,6 +43,7 @@ app.get("/make-server-ed1dd9fb/matches/live", async (c) => {
       return c.json({ error: "API key not configured" }, 500);
     }
 
+    console.log("Fetching from AllSportsAPI...");
     const response = await fetch("https://allsportsapi2.p.rapidapi.com/api/matches/live", {
       method: "GET",
       headers: {
@@ -43,63 +53,20 @@ app.get("/make-server-ed1dd9fb/matches/live", async (c) => {
       },
     });
 
+    console.log(`AllSportsAPI response status: ${response.status}`);
+
     if (!response.ok) {
       const errorText = await response.text();
       console.log(`Error fetching live matches from API: ${response.status} - ${errorText}`);
-      return c.json({ error: `API request failed: ${response.status}` }, response.status);
+      return c.json({ error: `API request failed: ${response.status}`, details: errorText }, response.status);
     }
 
     const data = await response.json();
-    console.log(`Successfully fetched ${data?.events?.length || 0} live matches`);
+    console.log(`Successfully fetched data:`, JSON.stringify(data).substring(0, 200));
     return c.json(data);
   } catch (error) {
     console.log(`Exception while fetching live matches: ${error}`);
     return c.json({ error: "Failed to fetch live matches", details: String(error) }, 500);
-  }
-});
-
-// Fetch matches by sport
-app.get("/make-server-ed1dd9fb/matches/:sport", async (c) => {
-  try {
-    const sport = c.req.param("sport");
-    const apiKey = Deno.env.get("RAPIDAPI_KEY");
-    
-    if (!apiKey) {
-      console.log(`Error fetching ${sport} matches: RAPIDAPI_KEY environment variable not set`);
-      return c.json({ error: "API key not configured" }, 500);
-    }
-
-    // Map sport names to API endpoints if needed
-    const sportMap: Record<string, string> = {
-      football: "football",
-      basketball: "basketball",
-      cricket: "cricket",
-      tennis: "tennis",
-    };
-
-    const apiSport = sportMap[sport.toLowerCase()] || sport;
-
-    const response = await fetch(`https://allsportsapi2.p.rapidapi.com/api/${apiSport}/matches/live`, {
-      method: "GET",
-      headers: {
-        "x-rapidapi-key": apiKey,
-        "x-rapidapi-host": "allsportsapi2.p.rapidapi.com",
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log(`Error fetching ${sport} matches from API: ${response.status} - ${errorText}`);
-      return c.json({ error: `API request failed: ${response.status}` }, response.status);
-    }
-
-    const data = await response.json();
-    console.log(`Successfully fetched ${data?.events?.length || 0} ${sport} matches`);
-    return c.json(data);
-  } catch (error) {
-    console.log(`Exception while fetching ${c.req.param("sport")} matches: ${error}`);
-    return c.json({ error: "Failed to fetch matches", details: String(error) }, 500);
   }
 });
 

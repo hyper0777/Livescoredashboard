@@ -5,10 +5,13 @@ import { Match } from "../data/mockData";
 import { Calendar, Clock, AlertCircle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useMatches } from "../hooks/useMatches";
+import { HeroSection } from "./HeroSection";
+import { ApiStatus } from "./ApiStatus";
 
 export function LiveScores() {
   const { matches, loading, error, useMockData } = useMatches();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showApiStatus, setShowApiStatus] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -28,14 +31,28 @@ export function LiveScores() {
 
   return (
     <div>
+      {/* Hero Section */}
+      {!loading && (
+        <HeroSection 
+          liveMatchCount={liveMatches.length} 
+          totalMatchCount={matches.length}
+        />
+      )}
+
       {/* Header with Date and Time */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-3xl font-bold text-white">Live Scores</h2>
           <div className="flex items-center gap-4 text-slate-400">
+            <button
+              onClick={() => setShowApiStatus(!showApiStatus)}
+              className="text-sm px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+            >
+              {showApiStatus ? "Hide" : "Show"} API Status
+            </button>
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              <span>{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <span className="hidden md:inline">{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
@@ -44,6 +61,13 @@ export function LiveScores() {
           </div>
         </div>
       </div>
+
+      {/* API Status */}
+      {showApiStatus && (
+        <div className="mb-6">
+          <ApiStatus />
+        </div>
+      )}
 
       {/* Demo Mode Alert */}
       {useMockData && (
