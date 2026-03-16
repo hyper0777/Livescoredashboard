@@ -10,12 +10,14 @@ export function ApiStatus() {
     apiKey: "checking" | "ok" | "error";
     liveData: "checking" | "ok" | "error";
     streamApi: "checking" | "ok" | "error";
+    highlightsApi: "checking" | "ok" | "error";
     details?: any;
   }>({
     backend: "checking",
     apiKey: "checking",
     liveData: "checking",
     streamApi: "checking",
+    highlightsApi: "checking",
   });
 
   const checkStatus = async () => {
@@ -24,6 +26,7 @@ export function ApiStatus() {
       apiKey: "checking",
       liveData: "checking",
       streamApi: "checking",
+      highlightsApi: "checking",
     });
 
     try {
@@ -77,11 +80,24 @@ export function ApiStatus() {
 
       const streamStatus = streamRes.ok ? "ok" : "error";
 
+      // Check highlights API
+      const highlightsRes = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/highlights`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      const highlightsStatus = highlightsRes.ok ? "ok" : "error";
+
       setStatus({
         backend: backendStatus,
         apiKey: apiKeyStatus,
         liveData: liveDataStatus,
         streamApi: streamStatus,
+        highlightsApi: highlightsStatus,
         details: {
           apiKeyPrefix: apiKeyData.apiKeyPrefix,
           liveDataResponse: liveData,
@@ -94,6 +110,7 @@ export function ApiStatus() {
         apiKey: "error",
         liveData: "error",
         streamApi: "error",
+        highlightsApi: "error",
         details: { error: String(error) },
       });
     }
@@ -169,6 +186,14 @@ export function ApiStatus() {
             <span className="text-sm text-slate-300">Stream API</span>
           </div>
           {getStatusBadge(status.streamApi)}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {getStatusIcon(status.highlightsApi)}
+            <span className="text-sm text-slate-300">Highlights API</span>
+          </div>
+          {getStatusBadge(status.highlightsApi)}
         </div>
       </div>
 

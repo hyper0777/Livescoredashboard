@@ -168,4 +168,102 @@ app.get("/make-server-ed1dd9fb/streams/live", async (c) => {
   }
 });
 
+// Fetch highlights for a specific match
+app.get("/make-server-ed1dd9fb/highlights/:matchId", async (c) => {
+  try {
+    const apiKey = Deno.env.get("RAPIDAPI_KEY");
+    
+    if (!apiKey) {
+      console.log("Error fetching highlights: RAPIDAPI_KEY environment variable not set");
+      return c.json({ error: "API key not configured" }, 500);
+    }
+
+    const matchId = c.req.param("matchId");
+    console.log(`Fetching highlights for match ID: ${matchId}`);
+    
+    const url = `https://live-football-streaming-api.p.rapidapi.com/api/v1/match/streamlinks/${matchId}`;
+    console.log(`Highlights API URL: ${url}`);
+    
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": "live-football-streaming-api.p.rapidapi.com",
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Live Football Streaming API response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`Error fetching highlights from API: ${response.status} - ${errorText}`);
+      
+      return c.json({ 
+        error: `Highlights API request failed with status ${response.status}`, 
+        details: errorText,
+        matchId: matchId,
+        message: "Highlights may not be available for this match yet."
+      }, 200);
+    }
+
+    const data = await response.json();
+    console.log(`Successfully fetched highlights data:`, JSON.stringify(data).substring(0, 200));
+    
+    return c.json({ 
+      success: true,
+      highlights: data, 
+      matchId: matchId 
+    });
+  } catch (error) {
+    console.log(`Exception while fetching highlights: ${error}`);
+    return c.json({ 
+      error: "Failed to fetch highlights", 
+      details: String(error),
+      message: "An error occurred while trying to fetch highlights. Please try again later."
+    }, 200);
+  }
+});
+
+// Fetch all available highlights
+app.get("/make-server-ed1dd9fb/highlights", async (c) => {
+  try {
+    const apiKey = Deno.env.get("RAPIDAPI_KEY");
+    
+    if (!apiKey) {
+      console.log("Error fetching highlights list: RAPIDAPI_KEY environment variable not set");
+      return c.json({ error: "API key not configured" }, 500);
+    }
+
+    console.log("Fetching finished matches for highlights...");
+    
+    // Get finished matches from AllSportsAPI
+    const matchesResponse = await fetch("https://allsportsapi2.p.rapidapi.com/api/matches/live", {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": "allsportsapi2.p.rapidapi.com",
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!matchesResponse.ok) {
+      console.log(`Error fetching matches for highlights: ${matchesResponse.status}`);
+      return c.json({ error: "Failed to fetch matches" }, matchesResponse.status);
+    }
+
+    const matchesData = await matchesResponse.json();
+    console.log(`Found matches data for highlights:`, JSON.stringify(matchesData).substring(0, 200));
+    
+    return c.json({ 
+      success: true,
+      matches: matchesData,
+      note: "Use /highlights/:matchId endpoint to get specific match highlights"
+    });
+  } catch (error) {
+    console.log(`Exception while fetching highlights list: ${error}`);
+    return c.json({ error: "Failed to fetch highlights list", details: String(error) }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

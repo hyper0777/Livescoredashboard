@@ -3,9 +3,10 @@ import { Match } from "../data/mockData";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Clock, ChevronRight, Radio } from "lucide-react";
+import { Clock, ChevronRight, Radio, Film } from "lucide-react";
 import { useState } from "react";
 import { LiveStreamViewer } from "./LiveStreamViewer";
+import { HighlightViewer } from "./HighlightViewer";
 
 interface MatchCardProps {
   match: Match;
@@ -13,6 +14,7 @@ interface MatchCardProps {
 
 export function MatchCard({ match }: MatchCardProps) {
   const [showStream, setShowStream] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(false);
 
   const getBadgeVariant = () => {
     switch (match.status) {
@@ -41,6 +43,15 @@ export function MatchCard({ match }: MatchCardProps) {
     return (
       <div className="mb-4">
         <LiveStreamViewer match={match} onClose={() => setShowStream(false)} />
+      </div>
+    );
+  }
+
+  // Show highlights viewer if requested
+  if (showHighlights) {
+    return (
+      <div className="mb-4">
+        <HighlightViewer match={match} onClose={() => setShowHighlights(false)} />
       </div>
     );
   }
@@ -99,21 +110,37 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         <div className="flex justify-between items-center mt-3">
-          {/* Watch Live Button - Only show for live football matches */}
-          {match.status === "live" && match.sport === "football" && (
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                setShowStream(true);
-              }}
-              size="sm"
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              <Radio className="w-3 h-3 mr-1 animate-pulse" />
-              Watch Live
-            </Button>
-          )}
-          {(match.status !== "live" || match.sport !== "football") && <div></div>}
+          <div className="flex gap-2">
+            {/* Watch Live Button - Only show for live football matches */}
+            {match.status === "live" && match.sport === "football" && (
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowStream(true);
+                }}
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Radio className="w-3 h-3 mr-1 animate-pulse" />
+                Watch Live
+              </Button>
+            )}
+            
+            {/* View Highlights Button - Only show for finished football matches */}
+            {match.status === "finished" && match.sport === "football" && (
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowHighlights(true);
+                }}
+                size="sm"
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                <Film className="w-3 h-3 mr-1" />
+                Highlights
+              </Button>
+            )}
+          </div>
           
           <Link to={`/match/${match.id}`}>
             <span className="text-slate-500 text-sm flex items-center gap-1 hover:text-emerald-400 transition-colors">

@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router";
-import { Trophy, TrendingUp, Radio } from "lucide-react";
+import { Trophy, TrendingUp, Radio, Film } from "lucide-react";
 
 export function Root() {
   const location = useLocation();
@@ -35,6 +35,17 @@ export function Root() {
               >
                 <Radio className="w-4 h-4" />
                 Live Streams
+              </Link>
+              <Link
+                to="/highlights"
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                  location.pathname === "/highlights"
+                    ? "bg-emerald-600 text-white"
+                    : "text-slate-300 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                <Film className="w-4 h-4" />
+                Highlights
               </Link>
               <Link
                 to="/standings"
