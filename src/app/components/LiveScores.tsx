@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { useMatches } from "../hooks/useMatches";
 import { HeroSection } from "./HeroSection";
 import { ApiStatus } from "./ApiStatus";
+import { LiveStreams } from "./LiveStreams";
 
 export function LiveScores() {
   const { matches, loading, error, useMockData } = useMatches();
@@ -28,6 +29,8 @@ export function LiveScores() {
   const liveMatches = matches.filter((m) => m.status === "live");
   const finishedMatches = matches.filter((m) => m.status === "finished");
   const upcomingMatches = matches.filter((m) => m.status === "upcoming");
+  
+  const liveFootballMatches = footballMatches.filter((m) => m.status === "live");
 
   return (
     <div>
@@ -37,6 +40,11 @@ export function LiveScores() {
           liveMatchCount={liveMatches.length} 
           totalMatchCount={matches.length}
         />
+      )}
+
+      {/* Live Streams Featured Section */}
+      {!loading && liveFootballMatches.length > 0 && (
+        <LiveStreams matches={matches} />
       )}
 
       {/* Header with Date and Time */}

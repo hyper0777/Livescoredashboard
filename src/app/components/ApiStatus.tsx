@@ -9,11 +9,13 @@ export function ApiStatus() {
     backend: "checking" | "ok" | "error";
     apiKey: "checking" | "ok" | "error";
     liveData: "checking" | "ok" | "error";
+    streamApi: "checking" | "ok" | "error";
     details?: any;
   }>({
     backend: "checking",
     apiKey: "checking",
     liveData: "checking",
+    streamApi: "checking",
   });
 
   const checkStatus = async () => {
@@ -21,6 +23,7 @@ export function ApiStatus() {
       backend: "checking",
       apiKey: "checking",
       liveData: "checking",
+      streamApi: "checking",
     });
 
     try {
@@ -62,10 +65,23 @@ export function ApiStatus() {
       const liveDataStatus = liveDataRes.ok ? "ok" : "error";
       const liveData = await liveDataRes.json();
 
+      // Check stream API
+      const streamRes = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/streams/live`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      const streamStatus = streamRes.ok ? "ok" : "error";
+
       setStatus({
         backend: backendStatus,
         apiKey: apiKeyStatus,
         liveData: liveDataStatus,
+        streamApi: streamStatus,
         details: {
           apiKeyPrefix: apiKeyData.apiKeyPrefix,
           liveDataResponse: liveData,
@@ -77,6 +93,7 @@ export function ApiStatus() {
         backend: "error",
         apiKey: "error",
         liveData: "error",
+        streamApi: "error",
         details: { error: String(error) },
       });
     }
@@ -144,6 +161,14 @@ export function ApiStatus() {
             <span className="text-sm text-slate-300">Live Data Feed</span>
           </div>
           {getStatusBadge(status.liveData)}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {getStatusIcon(status.streamApi)}
+            <span className="text-sm text-slate-300">Stream API</span>
+          </div>
+          {getStatusBadge(status.streamApi)}
         </div>
       </div>
 
