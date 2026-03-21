@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import { Root } from "./components/Root";
+import { Navigation } from "./components/Navigation";
 import { LiveScores } from "./components/LiveScores";
 import { Standings } from "./components/Standings";
 import { MatchDetail } from "./components/MatchDetail";
@@ -9,7 +9,7 @@ import { HighlightsPage } from "./components/HighlightsPage";
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: Root,
+    Component: Navigation,
     children: [
       { index: true, Component: LiveScores },
       { path: "standings", Component: Standings },
