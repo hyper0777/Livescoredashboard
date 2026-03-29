@@ -169,3 +169,10 @@ export const premierLeagueStandings: Standing[] = [
   { position: 7, team: 'Chelsea', played: 28, won: 13, drawn: 7, lost: 8, goalsFor: 42, goalsAgainst: 35, goalDifference: 7, points: 46 },
   { position: 8, team: 'Brighton', played: 28, won: 12, drawn: 8, lost: 8, goalsFor: 48, goalsAgainst: 38, goalDifference: 10, points: 44 },
 ];
+
+// Combined export of all matches
+export const mockMatches: Match[] = [
+  ...footballMatches,
+  ...basketballMatches,
+  ...cricketMatches
+];

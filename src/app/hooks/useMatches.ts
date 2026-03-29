@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Match, footballMatches, basketballMatches, cricketMatches } from "../data/mockData";
+import { Match, mockMatches } from "../data/mockData";
 import { projectId, publicAnonKey } from "/utils/supabase/info";
 
 export function useMatches() {
@@ -7,52 +7,60 @@ export function useMatches() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useMockData, setUseMockData] = useState(false);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
 
-  const fetchLiveMatches = async () => {
+  useEffect(() => {
+    fetchMatches();
+  }, []);
+
+  const fetchMatches = async () => {
+    setLoading(true);
+    setError(null);
+    setQuotaExceeded(false);
+
     try {
-      setLoading(true);
-      setError(null);
-      
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/matches/live`;
-      console.log("Fetching from:", url);
-      
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error Response:", errorText);
-        throw new Error(`API error: ${response.status} - ${errorText}`);
-      }
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/matches/live`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
 
       const data = await response.json();
-      console.log("API Response:", data);
-
-      const transformedMatches = transformApiData(data);
       
-      if (transformedMatches.length === 0) {
-        console.warn("No matches from API, using mock data");
+      // Check for rate limit errors (429)
+      if (data.error && (data.error.includes("429") || data.details?.includes("exceeded the DAILY quota"))) {
+        console.warn("API quota exceeded, using mock data");
+        setQuotaExceeded(true);
         setUseMockData(true);
-        setMatches([...footballMatches, ...basketballMatches, ...cricketMatches]);
+        setMatches(mockMatches);
+        setError("API quota exceeded. Showing demo data.");
+        setLoading(false);
+        return;
+      }
+
+      if (data.error) {
+        throw new Error(`API error: ${data.error}`);
+      }
+
+      // Transform API data to match our Match interface
+      const transformedMatches: Match[] = transformApiData(data);
+
+      if (transformedMatches.length === 0) {
+        console.log("No live matches from API, using mock data");
+        setUseMockData(true);
+        setMatches(mockMatches);
       } else {
-        setUseMockData(false);
         setMatches(transformedMatches);
+        setUseMockData(false);
       }
     } catch (err) {
       console.error("Error fetching live matches:", err);
-      
-      // Fallback to mock data on error
-      console.log("Using mock data as fallback");
+      setError(err instanceof Error ? err.message : "Failed to fetch matches");
       setUseMockData(true);
-      setMatches([...footballMatches, ...basketballMatches, ...cricketMatches]);
-      setError("Unable to fetch live data. Showing demo matches.");
+      setMatches(mockMatches);
     } finally {
       setLoading(false);
     }
@@ -94,48 +102,5 @@ export function useMatches() {
     return "football";
   };
 
-  useEffect(() => {
-    fetchLiveMatches();
-    
-    // Refresh every 30 seconds only if not using mock data
-    const interval = setInterval(() => {
-      if (!useMockData) {
-        fetchLiveMatches();
-      }
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [useMockData]);
-
-  // Simulate live score updates for demo data
-  useEffect(() => {
-    if (!useMockData) return;
-
-    const updateInterval = setInterval(() => {
-      setMatches((prevMatches) =>
-        prevMatches.map((match) => {
-          if (match.status !== "live") return match;
-
-          // Randomly update scores
-          if (Math.random() > 0.7) {
-            const updateHome = Math.random() > 0.5;
-            const points = match.sport === "basketball" 
-              ? (Math.random() > 0.5 ? 2 : 3) 
-              : 1;
-            
-            return {
-              ...match,
-              homeScore: updateHome ? match.homeScore + points : match.homeScore,
-              awayScore: !updateHome ? match.awayScore + points : match.awayScore,
-            };
-          }
-          return match;
-        })
-      );
-    }, 5000); // Update every 5 seconds for demo
-
-    return () => clearInterval(updateInterval);
-  }, [useMockData]);
-
-  return { matches, loading, error, refetch: fetchLiveMatches, useMockData };
+  return { matches, loading, error, useMockData, quotaExceeded, refetch: fetchMatches };
 }

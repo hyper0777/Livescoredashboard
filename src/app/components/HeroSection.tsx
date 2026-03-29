@@ -147,7 +147,7 @@ export function HeroSection({ liveMatchCount, totalMatchCount }: HeroSectionProp
 
         {/* Floating Elements */}
         <motion.div
-          className="absolute top-10 right-10 block"
+          className="absolute top-10 right-10 hidden lg:block"
           animate={{
             y: [0, -20, 0],
             rotate: [0, 5, 0],
@@ -164,7 +164,7 @@ export function HeroSection({ liveMatchCount, totalMatchCount }: HeroSectionProp
         </motion.div>
 
         <motion.div
-          className="absolute bottom-10 left-10 block"
+          className="absolute bottom-10 left-10 hidden lg:block"
           animate={{
             y: [0, 15, 0],
             rotate: [0, -5, 0],
