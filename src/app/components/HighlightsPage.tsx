@@ -2,16 +2,16 @@ import { useState } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Film, TrendingUp, Clock, Eye, Play } from "lucide-react";
+import { Film, TrendingUp, Clock, Eye, Play, AlertTriangle, Zap } from "lucide-react";
 import { useMatches } from "../hooks/useMatches";
 import { HighlightViewer } from "./HighlightViewer";
 import { Match } from "../data/mockData";
 import { motion } from "motion/react";
 import { Loader2, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "./ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 export function HighlightsPage() {
-  const { matches, loading, error, useMockData } = useMatches();
+  const { matches, loading, error, useMockData, quotaExceeded } = useMatches();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
   // Filter for finished football matches
@@ -33,17 +33,6 @@ export function HighlightsPage() {
     );
   }
 
-  if (error && !useMockData) {
-    return (
-      <div className="py-8">
-        <Alert className="bg-red-900/20 border-red-900">
-          <AlertCircle className="h-4 w-4 text-red-500" />
-          <AlertDescription className="text-red-400">{error}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   if (selectedMatch) {
     return (
       <div className="mb-8">
@@ -57,6 +46,45 @@ export function HighlightsPage() {
 
   return (
     <div>
+      {/* Quota Exceeded Warning */}
+      {quotaExceeded && (
+        <Alert className="mb-6 bg-amber-900/20 border-amber-600/50 backdrop-blur-sm">
+          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <AlertTitle className="text-amber-400 font-semibold text-lg">
+            API Quota Exceeded - Demo Mode Active
+          </AlertTitle>
+          <AlertDescription className="text-amber-200/90 mt-2">
+            <p className="mb-3">
+              Your RapidAPI daily quota has been exceeded. The app is now showing demo data to demonstrate functionality.
+            </p>
+            <div className="bg-amber-950/30 rounded-lg p-4 mb-3 border border-amber-700/30">
+              <p className="font-semibold mb-2 flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                To get live data again:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm ml-6">
+                <li>Wait until your quota resets (usually midnight UTC)</li>
+                <li>Upgrade your RapidAPI plan at <a href="https://rapidapi.com/fluis.lacasse/api/allsportsapi2" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-300">rapidapi.com</a></li>
+                <li>The demo data still shows all features and functionality</li>
+              </ul>
+            </div>
+            <Badge className="bg-amber-600 text-white">
+              Current Mode: Demo Data
+            </Badge>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {error && !quotaExceeded && (
+        <Alert className="mb-6 bg-blue-900/20 border-blue-600/50">
+          <AlertCircle className="h-4 w-4 text-blue-500" />
+          <AlertTitle className="text-blue-400">Using Demo Data</AlertTitle>
+          <AlertDescription className="text-blue-200">
+            {error}. Showing demo highlights instead.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">

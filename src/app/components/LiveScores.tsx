@@ -1,50 +1,85 @@
-import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useState } from "react";
 import { MatchCard } from "./MatchCard";
-import { Match } from "../data/mockData";
-import { Calendar, Clock, AlertCircle, Info } from "lucide-react";
-import { Alert, AlertDescription } from "./ui/alert";
 import { useMatches } from "../hooks/useMatches";
-import { HeroSection } from "./HeroSection";
-import { ApiStatus } from "./ApiStatus";
-import { LiveStreams } from "./LiveStreams";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { Loader2, AlertCircle, TrendingUp, RefreshCw, AlertTriangle, Zap, Calendar, Clock } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Match } from "../data/mockData";
 
 export function LiveScores() {
-  const { matches, loading, error, useMockData } = useMatches();
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [showApiStatus, setShowApiStatus] = useState(false);
+  const { matches, loading, error, useMockData, quotaExceeded, refetch } = useMatches();
+  const [selectedSport, setSelectedSport] = useState<string>("all");
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+  const sports = ["all", "football", "basketball", "cricket"];
 
-    return () => clearInterval(timer);
-  }, []);
+  const filteredMatches =
+    selectedSport === "all"
+      ? matches
+      : matches.filter((m) => m.sport === selectedSport);
 
-  const footballMatches = matches.filter(m => m.sport === "football");
-  const basketballMatches = matches.filter(m => m.sport === "basketball");
-  const cricketMatches = matches.filter(m => m.sport === "cricket");
-
-  const liveMatches = matches.filter((m) => m.status === "live");
-  const finishedMatches = matches.filter((m) => m.status === "finished");
-  const upcomingMatches = matches.filter((m) => m.status === "upcoming");
-  
-  const liveFootballMatches = footballMatches.filter((m) => m.status === "live");
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-4" />
+        <p className="text-slate-400">Loading live matches...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Hero Section */}
-      {!loading && (
-        <HeroSection 
-          liveMatchCount={liveMatches.length} 
-          totalMatchCount={matches.length}
-        />
+      {/* Quota Exceeded Warning */}
+      {quotaExceeded && (
+        <Alert className="mb-6 bg-amber-900/20 border-amber-600/50 backdrop-blur-sm">
+          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <AlertTitle className="text-amber-400 font-semibold text-lg">
+            API Quota Exceeded - Demo Mode Active
+          </AlertTitle>
+          <AlertDescription className="text-amber-200/90 mt-2">
+            <p className="mb-3">
+              Your RapidAPI daily quota has been exceeded. The app is now showing demo data to demonstrate functionality.
+            </p>
+            <div className="bg-amber-950/30 rounded-lg p-4 mb-3 border border-amber-700/30">
+              <p className="font-semibold mb-2 flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                To get live data again:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm ml-6">
+                <li>Wait until your quota resets (usually midnight UTC)</li>
+                <li>Upgrade your RapidAPI plan at <a href="https://rapidapi.com/fluis.lacasse/api/allsportsapi2" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-300">rapidapi.com</a></li>
+                <li>The demo data still shows all features and functionality</li>
+              </ul>
+            </div>
+            <Badge className="bg-amber-600 text-white">
+              Current Mode: Demo Data
+            </Badge>
+          </AlertDescription>
+        </Alert>
       )}
 
-      {/* Live Streams Featured Section */}
-      {!loading && liveFootballMatches.length > 0 && (
-        <LiveStreams matches={matches} />
+      {/* Regular Error Alert (non-quota errors) */}
+      {error && !quotaExceeded && useMockData && (
+        <Alert className="mb-6 bg-blue-900/20 border-blue-600/50">
+          <AlertCircle className="h-4 w-4 text-blue-500" />
+          <AlertTitle className="text-blue-400">Using Demo Data</AlertTitle>
+          <AlertDescription className="text-blue-200">
+            {error}. Showing demo matches instead.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Regular Error Alert (non-quota errors) */}
+      {error && !quotaExceeded && !useMockData && (
+        <Alert className="mb-6 bg-red-900/20 border-red-600/50">
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertTitle className="text-red-400">Error Fetching Data</AlertTitle>
+          <AlertDescription className="text-red-200">
+            {error}. Please try again later.
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Header with Date and Time */}
@@ -53,88 +88,54 @@ export function LiveScores() {
           <h2 className="text-3xl font-bold text-white">Live Scores</h2>
           <div className="flex items-center gap-4 text-slate-400">
             <button
-              onClick={() => setShowApiStatus(!showApiStatus)}
+              onClick={() => refetch()}
               className="text-sm px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
             >
-              {showApiStatus ? "Hide" : "Show"} API Status
+              <RefreshCw className="w-4 h-4" />
+              Refresh
             </button>
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              <span className="hidden md:inline">{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <span className="hidden md:inline">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              <span className="font-mono">{currentTime.toLocaleTimeString()}</span>
+              <span className="font-mono">{new Date().toLocaleTimeString()}</span>
             </div>
           </div>
         </div>
       </div>
-
-      {/* API Status */}
-      {showApiStatus && (
-        <div className="mb-6">
-          <ApiStatus />
-        </div>
-      )}
-
-      {/* Demo Mode Alert */}
-      {useMockData && (
-        <Alert className="mb-6 bg-blue-900/20 border-blue-900">
-          <Info className="h-4 w-4 text-blue-500" />
-          <AlertDescription className="text-blue-400">
-            Showing demo matches. Live API data will appear once the backend is configured.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error Alert */}
-      {error && !useMockData && (
-        <Alert className="mb-6 bg-red-900/20 border-red-900">
-          <AlertCircle className="h-4 w-4 text-red-500" />
-          <AlertDescription className="text-red-400">
-            {error}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-emerald-500"></div>
-          <p className="text-slate-400 mt-4">Loading live matches...</p>
-        </div>
-      )}
 
       {/* Content */}
       {!loading && (
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="mb-6 bg-slate-800 border border-slate-700">
             <TabsTrigger value="all">All Sports ({matches.length})</TabsTrigger>
-            <TabsTrigger value="football">Football ({footballMatches.length})</TabsTrigger>
-            <TabsTrigger value="basketball">Basketball ({basketballMatches.length})</TabsTrigger>
-            <TabsTrigger value="cricket">Cricket ({cricketMatches.length})</TabsTrigger>
+            <TabsTrigger value="football">Football ({matches.filter(m => m.sport === "football").length})</TabsTrigger>
+            <TabsTrigger value="basketball">Basketball ({matches.filter(m => m.sport === "basketball").length})</TabsTrigger>
+            <TabsTrigger value="cricket">Cricket ({matches.filter(m => m.sport === "cricket").length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
-            <MatchSection title="Live Now" matches={liveMatches} variant="live" />
-            <MatchSection title="Upcoming" matches={upcomingMatches} variant="upcoming" />
-            <MatchSection title="Finished" matches={finishedMatches} variant="finished" />
+            <MatchSection title="Live Now" matches={filteredMatches.filter((m) => m.status === "live")} variant="live" />
+            <MatchSection title="Upcoming" matches={filteredMatches.filter((m) => m.status === "upcoming")} variant="upcoming" />
+            <MatchSection title="Finished" matches={filteredMatches.filter((m) => m.status === "finished")} variant="finished" />
           </TabsContent>
 
           <TabsContent value="football">
             <MatchSection
               title="Live Now"
-              matches={footballMatches.filter((m) => m.status === "live")}
+              matches={filteredMatches.filter((m) => m.status === "live")}
               variant="live"
             />
             <MatchSection
               title="Upcoming"
-              matches={footballMatches.filter((m) => m.status === "upcoming")}
+              matches={filteredMatches.filter((m) => m.status === "upcoming")}
               variant="upcoming"
             />
             <MatchSection
               title="Finished"
-              matches={footballMatches.filter((m) => m.status === "finished")}
+              matches={filteredMatches.filter((m) => m.status === "finished")}
               variant="finished"
             />
           </TabsContent>
@@ -142,17 +143,17 @@ export function LiveScores() {
           <TabsContent value="basketball">
             <MatchSection
               title="Live Now"
-              matches={basketballMatches.filter((m) => m.status === "live")}
+              matches={filteredMatches.filter((m) => m.status === "live")}
               variant="live"
             />
             <MatchSection
               title="Upcoming"
-              matches={basketballMatches.filter((m) => m.status === "upcoming")}
+              matches={filteredMatches.filter((m) => m.status === "upcoming")}
               variant="upcoming"
             />
             <MatchSection
               title="Finished"
-              matches={basketballMatches.filter((m) => m.status === "finished")}
+              matches={filteredMatches.filter((m) => m.status === "finished")}
               variant="finished"
             />
           </TabsContent>
@@ -160,17 +161,17 @@ export function LiveScores() {
           <TabsContent value="cricket">
             <MatchSection
               title="Live Now"
-              matches={cricketMatches.filter((m) => m.status === "live")}
+              matches={filteredMatches.filter((m) => m.status === "live")}
               variant="live"
             />
             <MatchSection
               title="Upcoming"
-              matches={cricketMatches.filter((m) => m.status === "upcoming")}
+              matches={filteredMatches.filter((m) => m.status === "upcoming")}
               variant="upcoming"
             />
             <MatchSection
               title="Finished"
-              matches={cricketMatches.filter((m) => m.status === "finished")}
+              matches={filteredMatches.filter((m) => m.status === "finished")}
               variant="finished"
             />
           </TabsContent>
