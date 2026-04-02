@@ -100,23 +100,26 @@ app.get("/make-server-ed1dd9fb/stream/:matchSlug", async (c) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.log(`Error fetching stream link from API: ${response.status} - ${errorText}`);
-      
+
       // Return a more detailed error response
-      return c.json({ 
-        error: `Stream API request failed with status ${response.status}`, 
+      return c.json({
+        error: `Stream API request failed with status ${response.status}`,
         details: errorText,
         matchSlug: matchSlug,
         message: "Stream may not be available for this match. The Football Live Stream API might not have coverage for this specific game."
       }, 200); // Return 200 so frontend can handle gracefully
     }
 
-    const data = await response.text();
-    console.log(`Successfully fetched stream data (first 200 chars):`, data.substring(0, 200));
-    
-    return c.json({ 
+    // Read response as text first, then check format
+    const responseText = await response.text();
+    const contentType = response.headers.get("content-type");
+    console.log(`Stream response content-type: ${contentType}`);
+    console.log(`Stream response (first 300 chars):`, responseText.substring(0, 300));
+
+    return c.json({
       success: true,
-      streamData: data, 
-      matchSlug: matchSlug 
+      streamData: responseText,
+      matchSlug: matchSlug
     });
   } catch (error) {
     console.log(`Exception while fetching stream link: ${error}`);
@@ -198,22 +201,51 @@ app.get("/make-server-ed1dd9fb/highlights/:matchId", async (c) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.log(`Error fetching highlights from API: ${response.status} - ${errorText}`);
-      
-      return c.json({ 
-        error: `Highlights API request failed with status ${response.status}`, 
+
+      return c.json({
+        error: `Highlights API request failed with status ${response.status}`,
         details: errorText,
         matchId: matchId,
         message: "Highlights may not be available for this match yet."
       }, 200);
     }
 
-    const data = await response.json();
-    console.log(`Successfully fetched highlights data:`, JSON.stringify(data).substring(0, 200));
-    
-    return c.json({ 
+    // Try to parse as JSON, but handle non-JSON responses
+    const contentType = response.headers.get("content-type");
+    console.log(`Response content-type: ${contentType}`);
+
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log(`Raw response (first 300 chars): ${responseText.substring(0, 300)}`);
+
+      // Check if response looks like JSON
+      if (contentType?.includes("application/json") || responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
+        data = JSON.parse(responseText);
+        console.log(`Successfully parsed highlights JSON:`, JSON.stringify(data).substring(0, 200));
+      } else {
+        // Non-JSON response (HTML, plain text, etc.)
+        console.log(`Non-JSON response received. Content type: ${contentType}`);
+        return c.json({
+          error: "Invalid API response format",
+          message: "The highlights API returned an unexpected response format. Highlights may not be available for this match.",
+          matchId: matchId
+        }, 200);
+      }
+    } catch (parseError) {
+      console.log(`Failed to parse highlights response: ${parseError}`);
+      return c.json({
+        error: "Failed to parse highlights response",
+        details: String(parseError),
+        message: "Unable to process the highlights data. Please try again later.",
+        matchId: matchId
+      }, 200);
+    }
+
+    return c.json({
       success: true,
-      highlights: data, 
-      matchId: matchId 
+      highlights: data,
+      matchId: matchId
     });
   } catch (error) {
     console.log(`Exception while fetching highlights: ${error}`);
@@ -229,14 +261,14 @@ app.get("/make-server-ed1dd9fb/highlights/:matchId", async (c) => {
 app.get("/make-server-ed1dd9fb/highlights", async (c) => {
   try {
     const apiKey = Deno.env.get("RAPIDAPI_KEY");
-    
+
     if (!apiKey) {
       console.log("Error fetching highlights list: RAPIDAPI_KEY environment variable not set");
       return c.json({ error: "API key not configured" }, 500);
     }
 
     console.log("Fetching finished matches for highlights...");
-    
+
     // Get finished matches from AllSportsAPI
     const matchesResponse = await fetch("https://allsportsapi2.p.rapidapi.com/api/matches/live", {
       method: "GET",
@@ -254,8 +286,8 @@ app.get("/make-server-ed1dd9fb/highlights", async (c) => {
 
     const matchesData = await matchesResponse.json();
     console.log(`Found matches data for highlights:`, JSON.stringify(matchesData).substring(0, 200));
-    
-    return c.json({ 
+
+    return c.json({
       success: true,
       matches: matchesData,
       note: "Use /highlights/:matchId endpoint to get specific match highlights"
@@ -263,6 +295,92 @@ app.get("/make-server-ed1dd9fb/highlights", async (c) => {
   } catch (error) {
     console.log(`Exception while fetching highlights list: ${error}`);
     return c.json({ error: "Failed to fetch highlights list", details: String(error) }, 500);
+  }
+});
+
+// Fetch league standings
+app.get("/make-server-ed1dd9fb/standings/:leagueId", async (c) => {
+  try {
+    const apiKey = Deno.env.get("RAPIDAPI_KEY");
+
+    if (!apiKey) {
+      console.log("Error fetching standings: RAPIDAPI_KEY environment variable not set");
+      return c.json({ error: "API key not configured" }, 500);
+    }
+
+    const leagueId = c.req.param("leagueId");
+    console.log(`Fetching standings for league ID: ${leagueId}`);
+
+    const url = `https://free-api-live-football-data.p.rapidapi.com/football-get-standing-all?leagueid=${leagueId}`;
+    console.log(`Standings API URL: ${url}`);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": "free-api-live-football-data.p.rapidapi.com",
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Free API Live Football Data response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`Error fetching standings from API: ${response.status} - ${errorText}`);
+
+      return c.json({
+        error: `Standings API request failed with status ${response.status}`,
+        details: errorText,
+        leagueId: leagueId,
+        message: "Standings may not be available for this league."
+      }, 200);
+    }
+
+    // Try to parse as JSON, but handle non-JSON responses
+    const contentType = response.headers.get("content-type");
+    console.log(`Standings response content-type: ${contentType}`);
+
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log(`Standings raw response (first 300 chars): ${responseText.substring(0, 300)}`);
+
+      // Check if response looks like JSON
+      if (contentType?.includes("application/json") || responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
+        data = JSON.parse(responseText);
+        console.log(`Successfully parsed standings JSON:`, JSON.stringify(data).substring(0, 200));
+      } else {
+        // Non-JSON response (HTML, plain text, etc.)
+        console.log(`Non-JSON response received. Content type: ${contentType}`);
+        return c.json({
+          error: "Invalid API response format",
+          message: "The standings API returned an unexpected response format. Standings may not be available for this league.",
+          leagueId: leagueId
+        }, 200);
+      }
+    } catch (parseError) {
+      console.log(`Failed to parse standings response: ${parseError}`);
+      return c.json({
+        error: "Failed to parse standings response",
+        details: String(parseError),
+        message: "Unable to process the standings data. Please try again later.",
+        leagueId: leagueId
+      }, 200);
+    }
+
+    return c.json({
+      success: true,
+      standings: data,
+      leagueId: leagueId
+    });
+  } catch (error) {
+    console.log(`Exception while fetching standings: ${error}`);
+    return c.json({
+      error: "Failed to fetch standings",
+      details: String(error),
+      message: "An error occurred while trying to fetch standings. Please try again later."
+    }, 200);
   }
 });
 

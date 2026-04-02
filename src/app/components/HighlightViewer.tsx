@@ -38,9 +38,21 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
         }
       );
 
-      const data = await response.json();
-      console.log("Highlights response:", data);
-      
+      // First, get the response as text to check if it's valid JSON
+      const responseText = await response.text();
+      console.log("Raw highlights response (first 200 chars):", responseText.substring(0, 200));
+
+      let data;
+      try {
+        // Try to parse as JSON
+        data = JSON.parse(responseText);
+        console.log("Parsed highlights response:", data);
+      } catch (parseError) {
+        console.error("Failed to parse highlights response as JSON:", parseError);
+        console.error("Response text:", responseText);
+        throw new Error("The server returned an invalid response. The highlights API may be experiencing issues.");
+      }
+
       if (data.error) {
         throw new Error(data.message || data.error);
       }

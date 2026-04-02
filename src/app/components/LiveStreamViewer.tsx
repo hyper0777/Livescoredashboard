@@ -36,7 +36,7 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
     try {
       const matchSlug = generateMatchSlug(match);
       console.log("Fetching stream for slug:", matchSlug);
-      
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/stream/${matchSlug}`,
         {
@@ -46,9 +46,21 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
         }
       );
 
-      const data = await response.json();
-      console.log("Stream response:", data);
-      
+      // First, get the response as text to check if it's valid JSON
+      const responseText = await response.text();
+      console.log("Raw stream response (first 200 chars):", responseText.substring(0, 200));
+
+      let data;
+      try {
+        // Try to parse as JSON
+        data = JSON.parse(responseText);
+        console.log("Parsed stream response:", data);
+      } catch (parseError) {
+        console.error("Failed to parse stream response as JSON:", parseError);
+        console.error("Response text:", responseText);
+        throw new Error("The server returned an invalid response. The stream API may be experiencing issues.");
+      }
+
       // Check if there's an error in the response
       if (data.error) {
         throw new Error(data.message || data.error);
