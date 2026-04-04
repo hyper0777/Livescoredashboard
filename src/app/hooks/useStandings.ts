@@ -86,7 +86,12 @@ function transformApiStandings(apiData: any): StandingsTeam[] {
     // The API structure might vary, so we'll handle different formats
     let teamsArray = [];
 
-    if (Array.isArray(apiData)) {
+    // Handle Free API Live Football Data structure: response.standing
+    if (apiData.response && Array.isArray(apiData.response.standing)) {
+      teamsArray = apiData.response.standing;
+    } else if (apiData.standing && Array.isArray(apiData.standing)) {
+      teamsArray = apiData.standing;
+    } else if (Array.isArray(apiData)) {
       teamsArray = apiData;
     } else if (apiData.data && Array.isArray(apiData.data)) {
       teamsArray = apiData.data;
@@ -97,19 +102,30 @@ function transformApiStandings(apiData: any): StandingsTeam[] {
       return [];
     }
 
-    return teamsArray.map((team: any, index: number) => ({
-      position: team.position || team.rank || index + 1,
-      team: team.team || team.teamName || team.name || "Unknown Team",
-      played: team.played || team.matchesPlayed || team.games || 0,
-      won: team.won || team.wins || team.w || 0,
-      drawn: team.drawn || team.draws || team.d || 0,
-      lost: team.lost || team.losses || team.l || 0,
-      goalsFor: team.goalsFor || team.gf || team.goalsScored || 0,
-      goalsAgainst: team.goalsAgainst || team.ga || team.goalsConceded || 0,
-      goalDifference: team.goalDifference || team.gd || (team.goalsFor - team.goalsAgainst) || 0,
-      points: team.points || team.pts || 0,
-      form: team.form || undefined,
-    }));
+    return teamsArray.map((team: any, index: number) => {
+      // Parse scoresStr if present (format: "61-22" for goalsFor-goalsAgainst)
+      let goalsFor = 0;
+      let goalsAgainst = 0;
+      if (team.scoresStr && typeof team.scoresStr === 'string') {
+        const scores = team.scoresStr.split('-');
+        goalsFor = parseInt(scores[0]) || 0;
+        goalsAgainst = parseInt(scores[1]) || 0;
+      }
+
+      return {
+        position: team.idx || team.position || team.rank || index + 1,
+        team: team.name || team.shortName || team.team || team.teamName || "Unknown Team",
+        played: team.played || team.matchesPlayed || team.games || 0,
+        won: team.wins || team.won || team.w || 0,
+        drawn: team.draws || team.drawn || team.d || 0,
+        lost: team.losses || team.lost || team.l || 0,
+        goalsFor: goalsFor || team.goalsFor || team.gf || team.goalsScored || 0,
+        goalsAgainst: goalsAgainst || team.goalsAgainst || team.ga || team.goalsConceded || 0,
+        goalDifference: team.goalConDiff || team.goalDifference || team.gd || (goalsFor - goalsAgainst) || 0,
+        points: team.pts || team.points || 0,
+        form: team.form || undefined,
+      };
+    });
   } catch (error) {
     console.error("Error transforming standings data:", error);
     return [];
