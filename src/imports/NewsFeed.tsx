@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Clock, User, ArrowRight, X, BookOpen } from 'lucide-react';
-import { NewsArticle } from '@/data/sportsData';
+import { NewsArticle } from '../app/data/mockData';
 
 interface NewsFeedProps {
   articles: NewsArticle[];

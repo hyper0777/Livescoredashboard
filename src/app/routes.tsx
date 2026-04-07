@@ -5,6 +5,7 @@ import { Standings } from "./components/Standings";
 import { MatchDetail } from "./components/MatchDetail";
 import { LiveStreamsPage } from "./components/LiveStreamsPage";
 import { HighlightsPage } from "./components/HighlightsPage";
+import { NewsFeedPage } from "./components/NewsFeedPage";
 
 export const router = createBrowserRouter([
   {
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
       { path: "match/:id", Component: MatchDetail },
       { path: "streams", Component: LiveStreamsPage },
       { path: "highlights", Component: HighlightsPage },
+      { path: "newsfeed", Component: NewsFeedPage },
     ],
   },
 ]);
