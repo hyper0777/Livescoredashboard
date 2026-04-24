@@ -1,12 +1,12 @@
 import { Link } from "react-router";
-import { Match } from "../data/mockData";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Match } from "@/app/data/mockData";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Clock, ChevronRight, Radio, Film } from "lucide-react";
 import { useState } from "react";
-import { LiveStreamViewer } from "./LiveStreamViewer";
-import { HighlightViewer } from "./HighlightViewer";
+import { LiveStreamViewer } from "@/app/components/LiveStreamViewer";
+import { HighlightViewer } from "@/app/components/HighlightViewer";
 
 interface MatchCardProps {
   match: Match;

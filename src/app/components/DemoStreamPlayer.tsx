@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Play, Pause, Maximize2, Volume2, VolumeX, Radio, Info } from "lucide-react";
-import { Match } from "../data/mockData";
+import { Match } from "@/app/data/mockData";
 
 interface DemoStreamPlayerProps {
   match: Match;

@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { MatchCard } from "./MatchCard";
-import { useMatches } from "../hooks/useMatches";
-import { Button } from "./ui/button";
-import { Card } from "./ui/card";
+import { MatchCard } from "@/app/components/MatchCard";
+import { useMatches } from "@/app/hooks/useMatches";
+import { Button } from "@/app/components/ui/button";
+import { Card } from "@/app/components/ui/card";
 import { Loader2, AlertCircle, TrendingUp, RefreshCw, AlertTriangle, Zap, Calendar, Clock } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { Badge } from "./ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Match } from "../data/mockData";
+import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
+import { Badge } from "@/app/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
+import { Match } from "@/app/data/mockData";
 
 export function LiveScores() {
   const { matches, loading, error, useMockData, quotaExceeded, refetch } = useMatches();

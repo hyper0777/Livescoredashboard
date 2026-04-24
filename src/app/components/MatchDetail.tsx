@@ -1,8 +1,8 @@
 import { useParams, Link } from "react-router";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
 import { ArrowLeft, Clock, MapPin, Users } from "lucide-react";
-import { useMatches } from "../hooks/useMatches";
+import { useMatches } from "@/app/hooks/useMatches";
 
 export function MatchDetail() {
   const { id } = useParams();
