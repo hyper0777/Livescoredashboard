@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
 import { CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
+import { projectId, publicAnonKey } from "@utils/supabase/info";
 
 export function ApiStatus() {
   const [status, setStatus] = useState<{

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Play, Radio, TrendingUp, Users } from "lucide-react";
-import { LiveStreamViewer } from "./LiveStreamViewer";
-import { Match } from "../data/mockData";
+import { LiveStreamViewer } from "@/app/components/LiveStreamViewer";
+import { Match } from "@/app/data/mockData";
 import { motion } from "motion/react";
 
 interface LiveStreamsProps {

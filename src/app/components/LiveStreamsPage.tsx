@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Radio, Loader2, AlertCircle, Play, TrendingUp, AlertTriangle, Zap } from "lucide-react";
-import { useMatches } from "../hooks/useMatches";
-import { LiveStreamViewer } from "./LiveStreamViewer";
-import { Match } from "../data/mockData";
+import { useMatches } from "@/app/hooks/useMatches";
+import { LiveStreamViewer } from "@/app/components/LiveStreamViewer";
+import { Match } from "@/app/data/mockData";
 import { motion } from "motion/react";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 
 export function LiveStreamsPage() {
   const { matches, loading, error, useMockData, quotaExceeded } = useMatches();
