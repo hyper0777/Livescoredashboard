@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import { Root } from "./components/Root";
+import { Root } from "./imports/Root";
 import { LiveScores } from "./components/LiveScores";
 import { Standings } from "./components/Standings";
 import { MatchDetail } from "./components/MatchDetail";
