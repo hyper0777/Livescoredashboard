@@ -1,9 +1,6 @@
 import { Link } from "react-router";
-import { Match } from "@/app/data/mockData";
-import { Card } from "@/app/components/ui/card";
-import { Badge } from "@/app/components/ui/badge";
-import { Button } from "@/app/components/ui/button";
-import { Clock, ChevronRight, Radio, Film } from "lucide-react";
+import { Match } from "../data/mockData";
+import { Clock, ChevronRight, Radio, Film, Star } from "lucide-react";
 import { useState } from "react";
 import { LiveStreamViewer } from "@/app/components/LiveStreamViewer";
 import { HighlightViewer } from "@/app/components/HighlightViewer";
@@ -15,28 +12,7 @@ interface MatchCardProps {
 export function MatchCard({ match }: MatchCardProps) {
   const [showStream, setShowStream] = useState(false);
   const [showHighlights, setShowHighlights] = useState(false);
-
-  const getBadgeVariant = () => {
-    switch (match.status) {
-      case "live":
-        return "destructive";
-      case "finished":
-        return "secondary";
-      case "upcoming":
-        return "outline";
-      default:
-        return "default";
-    }
-  };
-
-  const getScoreColor = (isHome: boolean) => {
-    if (match.status === "upcoming") return "text-slate-500";
-    if (match.status === "finished") {
-      if (isHome && match.homeScore > match.awayScore) return "text-emerald-400";
-      if (!isHome && match.awayScore > match.homeScore) return "text-emerald-400";
-    }
-    return "text-white";
-  };
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Show stream viewer if requested
   if (showStream) {
@@ -56,100 +32,152 @@ export function MatchCard({ match }: MatchCardProps) {
     );
   }
 
+  const statusBadge = () => {
+    switch (match.status) {
+      case "live":
+        return (
+          <span className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500/20 rounded-full">
+            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+            <span className="text-red-400 text-[10px] font-bold uppercase">Live</span>
+          </span>
+        );
+      case "finished":
+        return (
+          <span className="px-2 py-0.5 bg-gray-500/20 rounded-full text-gray-400 text-[10px] font-bold uppercase">
+            Final
+          </span>
+        );
+      case "upcoming":
+        return (
+          <span className="px-2 py-0.5 bg-[#00d4ff]/20 rounded-full text-[#00d4ff] text-[10px] font-bold uppercase">
+            Scheduled
+          </span>
+        );
+    }
+  };
+
   return (
-    <Card className="bg-slate-800 border-slate-700 hover:bg-slate-750 transition-colors">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Badge variant={getBadgeVariant()} className="uppercase text-xs">
-              {match.status === "live" ? (
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                  Live
-                </span>
-              ) : (
-                match.status
-              )}
-            </Badge>
-            <span className="text-slate-400 text-sm">{match.league}</span>
-          </div>
-          <div className="flex items-center gap-2 text-slate-400">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm">{match.time}</span>
-          </div>
+    <div className="group relative bg-[#161b22] border border-white/5 rounded-2xl p-5 hover:border-[#00d4ff]/20 hover:bg-[#1c2333] transition-all cursor-pointer">
+      {/* Top row */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{match.league}</span>
+          <span className="text-gray-700">|</span>
+          <span className="text-[10px] text-gray-500 capitalize">{match.sport}</span>
         </div>
+        <div className="flex items-center gap-2">
+          {statusBadge()}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFavorite(!isFavorite);
+            }}
+            className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            <Star
+              className={`w-4 h-4 transition-colors ${
+                isFavorite ? "text-yellow-400 fill-yellow-400" : "text-gray-600 hover:text-gray-400"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-4">
-          {/* Home Team */}
-          <div className="text-right">
-            <p className="text-white font-semibold">{match.homeTeam}</p>
-          </div>
-
-          {/* Score */}
-          <div className="bg-slate-900 rounded-lg px-6 py-3 min-w-[120px]">
-            <div className="flex items-center justify-center gap-4">
-              <span className={`text-2xl font-bold ${getScoreColor(true)}`}>
-                {match.status === "upcoming" ? "-" : match.homeScore}
-              </span>
-              <span className="text-slate-600 text-xl">:</span>
-              <span className={`text-2xl font-bold ${getScoreColor(false)}`}>
-                {match.status === "upcoming" ? "-" : match.awayScore}
-              </span>
+      {/* Teams and scores */}
+      <div className="space-y-3">
+        {/* Home team */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00d4ff]/20 to-[#0066ff]/20 flex items-center justify-center text-[#00d4ff] text-[10px] font-black">
+              {match.homeTeam.substring(0, 3).toUpperCase()}
             </div>
-            {match.minute && match.status === "live" && (
-              <div className="text-center mt-1">
-                <span className="text-xs text-emerald-400 font-medium">{match.minute}</span>
-              </div>
-            )}
+            <span className="text-white font-medium text-sm">{match.homeTeam}</span>
           </div>
-
-          {/* Away Team */}
-          <div className="text-left">
-            <p className="text-white font-semibold">{match.awayTeam}</p>
-          </div>
+          <span
+            className={`text-2xl font-black tabular-nums ${
+              match.status !== "upcoming" && match.homeScore > match.awayScore
+                ? "text-white"
+                : "text-gray-500"
+            }`}
+          >
+            {match.status === "upcoming" ? "-" : match.homeScore}
+          </span>
         </div>
 
-        <div className="flex justify-between items-center mt-3">
-          <div className="flex gap-2">
-            {/* Watch Live Button - Only show for live football matches */}
-            {match.status === "live" && match.sport === "football" && (
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowStream(true);
-                }}
-                size="sm"
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Radio className="w-3 h-3 mr-1 animate-pulse" />
-                Watch Live
-              </Button>
-            )}
-            
-            {/* View Highlights Button - Only show for finished football matches */}
-            {match.status === "finished" && match.sport === "football" && (
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowHighlights(true);
-                }}
-                size="sm"
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                <Film className="w-3 h-3 mr-1" />
-                Highlights
-              </Button>
-            )}
+        {/* Away team */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center text-orange-400 text-[10px] font-black">
+              {match.awayTeam.substring(0, 3).toUpperCase()}
+            </div>
+            <span className="text-white font-medium text-sm">{match.awayTeam}</span>
           </div>
-          
+          <span
+            className={`text-2xl font-black tabular-nums ${
+              match.status !== "upcoming" && match.awayScore > match.homeScore
+                ? "text-white"
+                : "text-gray-500"
+            }`}
+          >
+            {match.status === "upcoming" ? "-" : match.awayScore}
+          </span>
+        </div>
+      </div>
+
+      {/* Time and actions bar */}
+      <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1">
+          <Clock className="w-3 h-3 text-gray-600" />
+          <span className="text-[#00d4ff] text-xs font-mono font-semibold">{match.time}</span>
+          {match.minute && match.status === "live" && (
+            <span className="text-[#00ff88] text-xs font-bold ml-1">{match.minute}</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Watch Live Button - Only for live football matches */}
+          {match.status === "live" && match.sport === "football" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowStream(true);
+              }}
+              className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 text-xs font-bold transition-all flex items-center gap-1"
+            >
+              <Radio className="w-3 h-3 animate-pulse" />
+              Live
+            </button>
+          )}
+
+          {/* View Highlights Button - Only for finished football matches */}
+          {match.status === "finished" && match.sport === "football" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowHighlights(true);
+              }}
+              className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg text-purple-400 text-xs font-bold transition-all flex items-center gap-1"
+            >
+              <Film className="w-3 h-3" />
+              Recap
+            </button>
+          )}
+
           <Link to={`/match/${match.id}`}>
-            <span className="text-slate-500 text-sm flex items-center gap-1 hover:text-emerald-400 transition-colors">
-              View Details
-              <ChevronRight className="w-4 h-4" />
+            <span className="text-gray-600 text-xs group-hover:text-[#00d4ff] transition-colors flex items-center gap-1">
+              Details
+              <ChevronRight className="w-3 h-3" />
             </span>
           </Link>
         </div>
       </div>
-    </Card>
+
+      {/* Glow effect on hover */}
+      {match.status === "live" && (
+        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="absolute inset-0 rounded-2xl shadow-[0_0_30px_rgba(0,212,255,0.1)]" />
+        </div>
+      )}
+    </div>
   );
 }

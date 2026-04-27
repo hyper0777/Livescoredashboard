@@ -67,32 +67,99 @@ export function useMatches() {
   };
 
   const transformApiData = (apiData: any): Match[] => {
-    if (!apiData || !apiData.events || !Array.isArray(apiData.events)) {
-      console.warn("Invalid API data structure:", apiData);
-      return [];
+    // Check for Free API Live Football Data structure (response.live array)
+    if (apiData && apiData.response && Array.isArray(apiData.response.live)) {
+      console.log("Transforming Free API Live Football Data format (response.live)");
+      return apiData.response.live.map((match: any, index: number) => {
+        const homeScore = match.home?.score ?? 0;
+        const awayScore = match.away?.score ?? 0;
+
+        // Determine status from match.status object
+        let status: "live" | "finished" | "upcoming" = "upcoming";
+        if (match.status?.ongoing || match.status?.started && !match.status?.finished) {
+          status = "live";
+        } else if (match.status?.finished) {
+          status = "finished";
+        }
+
+        // Extract minute from status.liveTime
+        const minute = match.status?.liveTime?.short || undefined;
+
+        return {
+          id: match.id?.toString() || `match-${index}`,
+          sport: "football",
+          homeTeam: match.home?.name || match.home?.longName || "Home Team",
+          awayTeam: match.away?.name || match.away?.longName || "Away Team",
+          homeScore,
+          awayScore,
+          status,
+          time: match.time || "TBD",
+          league: `League ${match.leagueId || ""}`,
+          minute,
+        };
+      });
     }
 
-    return apiData.events.map((event: any, index: number) => {
-      const homeScore = event.homeScore?.current || 0;
-      const awayScore = event.awayScore?.current || 0;
-      const status = event.status?.type === "inprogress" ? "live" : 
-                     event.status?.type === "finished" ? "finished" : "upcoming";
+    // Check for Free API Live Football Data structure (response.events array)
+    if (apiData && apiData.response && Array.isArray(apiData.response.events)) {
+      console.log("Transforming Free API Live Football Data format (response.events)");
+      return apiData.response.events.map((event: any, index: number) => {
+        const homeScore = event.homeScore?.current || event.homeScore?.display || 0;
+        const awayScore = event.awayScore?.current || event.awayScore?.display || 0;
 
-      return {
-        id: event.id?.toString() || `match-${index}`,
-        sport: determineSport(event.tournament?.category?.sport?.name || "football"),
-        homeTeam: event.homeTeam?.name || "Home Team",
-        awayTeam: event.awayTeam?.name || "Away Team",
-        homeScore,
-        awayScore,
-        status,
-        time: event.startTimestamp 
-          ? new Date(event.startTimestamp * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-          : "TBD",
-        league: event.tournament?.name || event.tournament?.category?.name || "League",
-        minute: event.time?.currentPeriodStartTimestamp ? `${Math.floor((Date.now() / 1000 - event.time.currentPeriodStartTimestamp) / 60)}'` : undefined,
-      };
-    });
+        // Determine status
+        let status: "live" | "finished" | "upcoming" = "upcoming";
+        if (event.status?.type === "inprogress" || event.status?.description === "In Progress") {
+          status = "live";
+        } else if (event.status?.type === "finished" || event.status?.description === "Ended") {
+          status = "finished";
+        }
+
+        return {
+          id: event.id?.toString() || `match-${index}`,
+          sport: "football",
+          homeTeam: event.homeTeam?.name || "Home Team",
+          awayTeam: event.awayTeam?.name || "Away Team",
+          homeScore,
+          awayScore,
+          status,
+          time: event.startTimestamp
+            ? new Date(event.startTimestamp * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            : event.time || "TBD",
+          league: event.tournament?.name || event.tournament?.category?.name || event.league?.name || "League",
+          minute: event.time?.minute ? `${event.time.minute}'` : undefined,
+        };
+      });
+    }
+
+    // Check for AllSportsAPI structure
+    if (apiData && apiData.events && Array.isArray(apiData.events)) {
+      console.log("Transforming AllSportsAPI format");
+      return apiData.events.map((event: any, index: number) => {
+        const homeScore = event.homeScore?.current || 0;
+        const awayScore = event.awayScore?.current || 0;
+        const status = event.status?.type === "inprogress" ? "live" :
+                       event.status?.type === "finished" ? "finished" : "upcoming";
+
+        return {
+          id: event.id?.toString() || `match-${index}`,
+          sport: determineSport(event.tournament?.category?.sport?.name || "football"),
+          homeTeam: event.homeTeam?.name || "Home Team",
+          awayTeam: event.awayTeam?.name || "Away Team",
+          homeScore,
+          awayScore,
+          status,
+          time: event.startTimestamp
+            ? new Date(event.startTimestamp * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            : "TBD",
+          league: event.tournament?.name || event.tournament?.category?.name || "League",
+          minute: event.time?.currentPeriodStartTimestamp ? `${Math.floor((Date.now() / 1000 - event.time.currentPeriodStartTimestamp) / 60)}'` : undefined,
+        };
+      });
+    }
+
+    console.warn("Invalid API data structure:", apiData);
+    return [];
   };
 
   const determineSport = (sportName: string): "football" | "basketball" | "cricket" => {

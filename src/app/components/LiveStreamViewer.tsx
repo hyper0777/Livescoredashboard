@@ -36,7 +36,7 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
     try {
       const matchSlug = generateMatchSlug(match);
       console.log("Fetching stream for slug:", matchSlug);
-      
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/stream/${matchSlug}`,
         {
@@ -46,22 +46,44 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
         }
       );
 
-      const data = await response.json();
-      console.log("Stream response:", data);
-      
+      // First, get the response as text to check if it's valid JSON
+      const responseText = await response.text();
+      console.log("Raw stream response (first 200 chars):", responseText.substring(0, 200));
+
+      let data;
+      try {
+        // Try to parse as JSON
+        data = JSON.parse(responseText);
+        console.log("Parsed stream response:", data);
+      } catch (parseError) {
+        console.error("Failed to parse stream response as JSON:", parseError);
+        console.error("Response text:", responseText);
+        throw new Error("The server returned an invalid response. The stream API may be experiencing issues.");
+      }
+
       // Check if there's an error in the response
       if (data.error) {
-        throw new Error(data.message || data.error);
+        // This is expected behavior - not all matches have stream coverage
+        console.log("Stream not available from API:", data.message || data.error);
+        setError(data.message || data.error);
+        setLoading(false);
+        return;
       }
 
       // Check if stream was successful
       if (data.success && data.streamData) {
         setStreamUrl(data.streamData);
       } else {
-        throw new Error(data.message || "No stream data available for this match");
+        console.log("No stream data in API response");
+        setError(data.message || "No stream data available for this match");
       }
     } catch (err) {
-      console.error("Error fetching stream:", err);
+      // Only log as error if it's an unexpected failure (like network error)
+      if (err instanceof Error && !err.message.includes("may not have coverage")) {
+        console.error("Unexpected error fetching stream:", err);
+      } else {
+        console.log("Stream unavailable:", err);
+      }
       setError(err instanceof Error ? err.message : "Failed to load stream");
     } finally {
       setLoading(false);
@@ -76,7 +98,7 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
   return (
     <Card className="bg-slate-800/95 border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-4">
+      <div className="bg-gradient-to-r from-[#00d4ff] to-[#0066ff] p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -100,7 +122,7 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
           <div className="text-lg font-bold">
             {match.homeTeam} vs {match.awayTeam}
           </div>
-          <div className="text-sm text-emerald-100">{match.league}</div>
+          <div className="text-sm text-blue-100">{match.league}</div>
         </div>
       </div>
 
@@ -108,8 +130,8 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
       <div className="relative bg-slate-900">
         {!streamUrl && !loading && !error && (
           <div className="flex flex-col items-center justify-center p-12 gap-4">
-            <div className="w-20 h-20 rounded-full bg-emerald-600/20 flex items-center justify-center">
-              <Play className="w-10 h-10 text-emerald-500" />
+            <div className="w-20 h-20 rounded-full bg-[#00d4ff]/20 flex items-center justify-center">
+              <Play className="w-10 h-10 text-[#00d4ff]" />
             </div>
             <div className="text-center">
               <h3 className="text-xl font-semibold text-white mb-2">
@@ -121,7 +143,7 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
             </div>
             <Button
               onClick={fetchStreamLink}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-[#00d4ff] hover:bg-[#00b8e6] text-white"
             >
               <Play className="w-4 h-4 mr-2" />
               Load Stream
@@ -131,24 +153,26 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
 
         {loading && (
           <div className="flex flex-col items-center justify-center p-12 gap-4">
-            <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+            <Loader2 className="w-12 h-12 text-[#00d4ff] animate-spin" />
             <p className="text-slate-400">Loading live stream...</p>
           </div>
         )}
 
         {error && (
           <div className="flex flex-col items-center justify-center p-12 gap-4">
-            <div className="w-20 h-20 rounded-full bg-red-600/20 flex items-center justify-center">
-              <AlertCircle className="w-10 h-10 text-red-500" />
+            <div className="w-20 h-20 rounded-full bg-blue-600/20 flex items-center justify-center">
+              <Radio className="w-10 h-10 text-blue-400" />
             </div>
             <div className="text-center max-w-md">
               <h3 className="text-xl font-semibold text-white mb-2">
-                Stream Unavailable
+                Stream Not Available
               </h3>
-              <p className="text-slate-400 mb-4">{error}</p>
-              <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg p-3 mb-4">
-                <p className="text-sm text-amber-300">
-                  The Football Live Stream API may not have coverage for this match yet. You can try the demo player to see how the stream interface works.
+              <p className="text-slate-400 mb-4">
+                Live stream coverage is not available for this match at the moment.
+              </p>
+              <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-300">
+                  Not all matches have live stream coverage. This is normal and doesn't indicate an error. Try the demo player to see how the streaming interface works.
                 </p>
               </div>
             </div>
@@ -162,7 +186,7 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
               </Button>
               <Button
                 onClick={() => setUseDemoMode(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-[#00d4ff] hover:bg-[#00b8e6] text-white"
               >
                 Use Demo Stream
               </Button>
@@ -178,7 +202,7 @@ export function LiveStreamViewer({ match, onClose }: LiveStreamViewerProps) {
                 <p className="text-white mb-4">Stream content would be displayed here</p>
                 <div className="bg-slate-800 rounded-lg p-4 max-w-2xl overflow-auto max-h-96">
                   <p className="text-xs text-slate-400 mb-2">Stream Data (Raw API Response):</p>
-                  <pre className="text-xs text-left text-emerald-400">
+                  <pre className="text-xs text-left text-[#00d4ff]">
                     {typeof streamUrl === 'string' ? streamUrl.substring(0, 500) : JSON.stringify(streamUrl, null, 2).substring(0, 500)}
                   </pre>
                 </div>

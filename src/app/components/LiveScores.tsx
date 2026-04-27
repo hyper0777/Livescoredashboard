@@ -82,38 +82,49 @@ export function LiveScores() {
         </Alert>
       )}
 
-      {/* Header with Date and Time */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-3xl font-bold text-white">Live Scores</h2>
-          <div className="flex items-center gap-4 text-slate-400">
+      {/* Hero Banner */}
+      <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 -mx-4 lg:-mx-0 mb-8 overflow-hidden relative">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
+        <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-3 h-3 bg-white rounded-full animate-pulse shadow-lg shadow-white/50"></div>
+                <span className="text-white/90 text-sm font-semibold uppercase tracking-wide">Live Coverage</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tight">Live Scores</h1>
+              <p className="text-emerald-100 text-lg">Follow every goal, every point, every moment</p>
+            </div>
             <button
               onClick={() => refetch()}
-              className="text-sm px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+              className="hidden md:flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all font-semibold border border-white/30 hover:scale-105"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-5 h-5" />
               Refresh
             </button>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              <span className="hidden md:inline">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              <span className="font-mono">{new Date().toLocaleTimeString()}</span>
-            </div>
           </div>
         </div>
       </div>
 
+      {/* Container */}
+      <div className="max-w-7xl mx-auto px-4">
+
       {/* Content */}
       {!loading && (
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="mb-6 bg-slate-800 border border-slate-700">
-            <TabsTrigger value="all">All Sports ({matches.length})</TabsTrigger>
-            <TabsTrigger value="football">Football ({matches.filter(m => m.sport === "football").length})</TabsTrigger>
-            <TabsTrigger value="basketball">Basketball ({matches.filter(m => m.sport === "basketball").length})</TabsTrigger>
-            <TabsTrigger value="cricket">Cricket ({matches.filter(m => m.sport === "cricket").length})</TabsTrigger>
+          <TabsList className="mb-8 bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 p-1.5 w-full justify-start overflow-x-auto">
+            <TabsTrigger value="all" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white px-6 py-2.5 rounded-lg font-semibold">
+              All Sports ({matches.length})
+            </TabsTrigger>
+            <TabsTrigger value="football" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white px-6 py-2.5 rounded-lg font-semibold">
+              ⚽ Football ({matches.filter(m => m.sport === "football").length})
+            </TabsTrigger>
+            <TabsTrigger value="basketball" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white px-6 py-2.5 rounded-lg font-semibold">
+              🏀 Basketball ({matches.filter(m => m.sport === "basketball").length})
+            </TabsTrigger>
+            <TabsTrigger value="cricket" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white px-6 py-2.5 rounded-lg font-semibold">
+              🏏 Cricket ({matches.filter(m => m.sport === "cricket").length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
@@ -177,6 +188,7 @@ export function LiveScores() {
           </TabsContent>
         </Tabs>
       )}
+      </div>
     </div>
   );
 }
@@ -190,27 +202,33 @@ interface MatchSectionProps {
 function MatchSection({ title, matches, variant }: MatchSectionProps) {
   if (matches.length === 0) {
     return (
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-white mb-4">{title}</h3>
-        <div className="text-center py-8 bg-slate-800 rounded-lg border border-slate-700">
-          <p className="text-slate-400">No {title.toLowerCase()} matches available</p>
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-1 w-1 bg-emerald-500 rounded-full"></div>
+          <h3 className="text-2xl font-bold text-white uppercase tracking-tight">{title}</h3>
+        </div>
+        <div className="text-center py-12 bg-slate-900/40 backdrop-blur-sm rounded-2xl border border-slate-800/50">
+          <p className="text-slate-500">No {title.toLowerCase()} matches available</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mb-8">
-      <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-        {title}
+    <div className="mb-10">
+      <div className="flex items-center gap-3 mb-5">
         {variant === "live" && (
-          <span className="flex items-center gap-1">
+          <div className="flex items-center gap-2 bg-red-500/20 px-3 py-1.5 rounded-full border border-red-500/30">
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            <span className="text-sm text-red-500">({matches.length})</span>
-          </span>
+            <span className="text-xs font-bold text-red-400 uppercase">Live</span>
+          </div>
         )}
-      </h3>
-      <div className="grid gap-4">
+        <h3 className="text-2xl font-bold text-white uppercase tracking-tight">{title}</h3>
+        <div className="bg-slate-800/50 px-3 py-1 rounded-full">
+          <span className="text-sm font-bold text-slate-400">{matches.length}</span>
+        </div>
+      </div>
+      <div className="grid gap-3">
         {matches.map((match) => (
           <MatchCard key={match.id} match={match} />
         ))}
