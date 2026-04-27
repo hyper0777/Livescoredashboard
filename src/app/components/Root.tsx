@@ -1,8 +1,48 @@
 import { Outlet, Link, useLocation } from "react-router";
+import { useEffect } from "react";
 import { Trophy, TrendingUp, Radio, Film } from "lucide-react";
+
+const seoByPath: Record<string, { title: string; description: string }> = {
+  "/": {
+    title: "Live Scores | LiveScore Dashboard",
+    description: "Follow real-time football, basketball, and cricket scores with fast match updates.",
+  },
+  "/streams": {
+    title: "Live Streams | LiveScore Dashboard",
+    description: "Watch available live sports streams and track ongoing matches in one place.",
+  },
+  "/highlights": {
+    title: "Highlights | LiveScore Dashboard",
+    description: "Catch recent match highlights, key moments, and top sports clips.",
+  },
+  "/standings": {
+    title: "Standings | LiveScore Dashboard",
+    description: "View up-to-date league standings, team positions, and season performance.",
+  },
+};
 
 export function Root() {
   const location = useLocation();
+
+  useEffect(() => {
+    const matchDetailPattern = /^\/match\//;
+    const seo = matchDetailPattern.test(location.pathname)
+      ? {
+          title: "Match Details | LiveScore Dashboard",
+          description: "See lineups, scoreline context, and live match information.",
+        }
+      : seoByPath[location.pathname] ?? {
+          title: "LiveScore Dashboard",
+          description: "Real-time sports updates for scores, streams, highlights, and standings.",
+        };
+
+    document.title = seo.title;
+
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+    if (descriptionMeta) {
+      descriptionMeta.setAttribute("content", seo.description);
+    }
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-slate-950">

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Play, Loader2, X, Film, AlertCircle, Clock, Eye } from "lucide-react";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
-import { Match } from "../data/mockData";
+import { projectId, publicAnonKey } from "@utils/supabase/info";
+import { Match } from "@/app/data/mockData";
 
 interface HighlightViewerProps {
   match: Match;

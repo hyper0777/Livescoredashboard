@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Match, mockMatches } from "../data/mockData";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
+import { Match, mockMatches } from "@/app/data/mockData";
+import { projectId, publicAnonKey } from "@utils/supabase/info";
 
 export function useMatches() {
   const [matches, setMatches] = useState<Match[]>([]);

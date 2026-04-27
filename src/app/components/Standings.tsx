@@ -1,6 +1,6 @@
-import { premierLeagueStandings } from "../data/mockData";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
+import { premierLeagueStandings } from "@/app/data/mockData";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
 import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export function Standings() {
