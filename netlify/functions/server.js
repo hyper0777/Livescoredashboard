@@ -12,12 +12,18 @@ const json = (statusCode, body) => ({
 const getPath = (rawPath = "") => {
   const marker = "/.netlify/functions/server";
   const idx = rawPath.indexOf(marker);
+  let normalized = rawPath;
 
-  if (idx === -1) {
-    return rawPath;
+  if (idx !== -1) {
+    normalized = rawPath.slice(idx + marker.length) || "/";
   }
 
-  return rawPath.slice(idx + marker.length) || "/";
+  if (normalized.startsWith("/api")) {
+    const apiPath = normalized.slice("/api".length);
+    normalized = apiPath.startsWith("/") ? apiPath : `/${apiPath}`;
+  }
+
+  return normalized || "/";
 };
 
 const fetchFromRapidApi = async (url, host, apiKey) => {
