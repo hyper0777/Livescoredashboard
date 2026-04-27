@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Play, Loader2, X, Film, AlertCircle, Clock, Eye } from "lucide-react";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
-import { Match } from "../data/mockData";
+import { projectId, publicAnonKey } from "@utils/supabase/info";
+import { Match } from "@/app/data/mockData";
 
 interface HighlightViewerProps {
   match: Match;
@@ -38,19 +38,11 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
         }
       );
 
-      // First, get the response as text to check if it's valid JSON
-      const responseText = await response.text();
-      console.log("Raw highlights response (first 200 chars):", responseText.substring(0, 200));
+      const data = await response.json();
+      console.log("Highlights response:", data);
 
-      let data;
-      try {
-        // Try to parse as JSON
-        data = JSON.parse(responseText);
-        console.log("Parsed highlights response:", data);
-      } catch (parseError) {
-        console.error("Failed to parse highlights response as JSON:", parseError);
-        console.error("Response text:", responseText);
-        throw new Error("The server returned an invalid response. The highlights API may be experiencing issues.");
+      if (!response.ok) {
+        throw new Error(data.message || `Error loading highlights (${response.status})`);
       }
 
       if (data.error) {
@@ -59,12 +51,16 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
 
       if (data.success && data.highlights) {
         setHighlights(data.highlights);
+      } else if (data.highlights) {
+        setHighlights(data.highlights);
       } else {
-        throw new Error(data.message || "No highlights available for this match");
+        // Set a user-friendly message when highlights aren't available yet
+        setError("Highlights are not yet available for this match. They're typically published shortly after the match ends.");
       }
     } catch (err) {
       console.error("Error fetching highlights:", err);
-      setError(err instanceof Error ? err.message : "Failed to load highlights");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load highlights";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

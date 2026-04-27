@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Play, Loader2, X, Maximize2, Volume2, VolumeX, Radio, AlertCircle } from "lucide-react";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
-import { Match } from "../data/mockData";
-import { DemoStreamPlayer } from "./DemoStreamPlayer";
+import { projectId, publicAnonKey } from "@utils/supabase/info";
+import { Match } from "@/app/data/mockData";
+import { DemoStreamPlayer } from "@/app/components/DemoStreamPlayer";
 
 interface LiveStreamViewerProps {
   match: Match;

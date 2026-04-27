@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { Trophy, Zap, TrendingUp, Clock, Users, Globe } from "lucide-react";
-import { Badge } from "./ui/badge";
+import { Badge } from "@/app/components/ui/badge";
 
 interface HeroSectionProps {
   liveMatchCount: number;

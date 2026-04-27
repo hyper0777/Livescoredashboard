@@ -2,8 +2,8 @@ import { Link } from "react-router";
 import { Match } from "../data/mockData";
 import { Clock, ChevronRight, Radio, Film, Star } from "lucide-react";
 import { useState } from "react";
-import { LiveStreamViewer } from "./LiveStreamViewer";
-import { HighlightViewer } from "./HighlightViewer";
+import { LiveStreamViewer } from "@/app/components/LiveStreamViewer";
+import { HighlightViewer } from "@/app/components/HighlightViewer";
 
 interface MatchCardProps {
   match: Match;

@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Card } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { Film, TrendingUp, Clock, Eye, Play, AlertTriangle, Zap } from "lucide-react";
-import { useMatches } from "../hooks/useMatches";
-import { HighlightViewer } from "./HighlightViewer";
-import { Match } from "../data/mockData";
+import { useMatches } from "@/app/hooks/useMatches";
+import { HighlightViewer } from "@/app/components/HighlightViewer";
+import { Match } from "@/app/data/mockData";
 import { motion } from "motion/react";
 import { Loader2, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 
 export function HighlightsPage() {
   const { matches, loading, error, useMockData, quotaExceeded } = useMatches();
