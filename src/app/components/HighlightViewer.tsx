@@ -40,19 +40,27 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
 
       const data = await response.json();
       console.log("Highlights response:", data);
-      
+
+      if (!response.ok) {
+        throw new Error(data.message || `Error loading highlights (${response.status})`);
+      }
+
       if (data.error) {
         throw new Error(data.message || data.error);
       }
 
       if (data.success && data.highlights) {
         setHighlights(data.highlights);
+      } else if (data.highlights) {
+        setHighlights(data.highlights);
       } else {
-        throw new Error(data.message || "No highlights available for this match");
+        // Set a user-friendly message when highlights aren't available yet
+        setError("Highlights are not yet available for this match. They're typically published shortly after the match ends.");
       }
     } catch (err) {
       console.error("Error fetching highlights:", err);
-      setError(err instanceof Error ? err.message : "Failed to load highlights");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load highlights";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
