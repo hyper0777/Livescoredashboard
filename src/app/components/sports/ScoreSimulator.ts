@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { LiveMatch, liveMatches as fallbackMatches } from '@/data/sportsData';
+import { supabase } from '@/lib/supabase';
 
 const POLL_INTERVAL = 30000; // Poll every 30 seconds
 
-// Map API response to LiveMatch format
-function mapApiMatchToLiveMatch(apiMatch: any): LiveMatch | null {
+// Map Supabase row to LiveMatch format
+function mapSupabaseMatchToLiveMatch(dbMatch: any): LiveMatch | null {
   try {
-    // Determine sport based on league/competition
+    // Determine sport
     let sport: 'football' | 'basketball' | 'soccer' | 'baseball' | 'tennis' = 'soccer';
-    const league = apiMatch.league?.toLowerCase() || '';
+    const league = dbMatch.league?.toLowerCase() || '';
 
     if (league.includes('nfl')) sport = 'football';
     else if (league.includes('nba') || league.includes('basketball')) sport = 'basketball';
@@ -17,33 +18,36 @@ function mapApiMatchToLiveMatch(apiMatch: any): LiveMatch | null {
     else sport = 'soccer';
 
     // Get team colors and abbreviations
-    const homeAbbr = apiMatch.home_team?.slice(0, 3).toUpperCase() || 'HOME';
-    const awayAbbr = apiMatch.away_team?.slice(0, 3).toUpperCase() || 'AWAY';
+    const homeAbbr = (dbMatch.home_team || dbMatch.homeTeam)?.slice(0, 3).toUpperCase() || 'HOME';
+    const awayAbbr = (dbMatch.away_team || dbMatch.awayTeam)?.slice(0, 3).toUpperCase() || 'AWAY';
 
     // Map status
-    const status = apiMatch.match_status?.toLowerCase() || 'live';
+    const status = (dbMatch.status || dbMatch.match_status)?.toLowerCase() || 'live';
     let mappedStatus: 'live' | 'halftime' | 'final' = 'live';
     if (status === 'finished' || status === 'final') mappedStatus = 'final';
     else if (status === 'halftime' || status === 'ht') mappedStatus = 'halftime';
     else mappedStatus = 'live';
 
+    const homeTeam = dbMatch.home_team || dbMatch.homeTeam || 'Home Team';
+    const awayTeam = dbMatch.away_team || dbMatch.awayTeam || 'Away Team';
+
     return {
-      id: parseInt(apiMatch.match_id) || Math.random(),
+      id: dbMatch.id || Math.random(),
       sport,
-      league: apiMatch.league || 'Unknown League',
-      homeTeam: apiMatch.home_team || 'Home Team',
-      awayTeam: apiMatch.away_team || 'Away Team',
-      homeScore: parseInt(apiMatch.home_score) || 0,
-      awayScore: parseInt(apiMatch.away_score) || 0,
-      time: apiMatch.match_time || 'TBD',
+      league: dbMatch.league || 'Unknown League',
+      homeTeam,
+      awayTeam,
+      homeScore: parseInt(dbMatch.home_score || dbMatch.homeScore) || 0,
+      awayScore: parseInt(dbMatch.away_score || dbMatch.awayScore) || 0,
+      time: dbMatch.time || dbMatch.match_time || 'TBD',
       status: mappedStatus,
-      homeColor: generateColorForTeam(apiMatch.home_team),
-      awayColor: generateColorForTeam(apiMatch.away_team),
+      homeColor: dbMatch.home_color || dbMatch.homeColor || generateColorForTeam(homeTeam),
+      awayColor: dbMatch.away_color || dbMatch.awayColor || generateColorForTeam(awayTeam),
       homeAbbr,
       awayAbbr,
     };
   } catch (err) {
-    console.error('Error mapping API match:', err);
+    console.error('Error mapping Supabase match:', err);
     return null;
   }
 }
@@ -75,6 +79,39 @@ export function useScoreSimulator() {
 
   const fetchLiveScores = useCallback(async () => {
     try {
+      // Try to fetch from Supabase first
+      console.log('Attempting to fetch live matches from Supabase...');
+
+      const { data: supabaseMatches, error: supabaseError } = await supabase
+        .from('live_matches')
+        .select('*')
+        .eq('status', 'live')
+        .limit(15);
+
+      if (supabaseError) {
+        console.warn('Supabase error:', supabaseError.message);
+        throw new Error(`Supabase: ${supabaseError.message}`);
+      }
+
+      if (supabaseMatches && supabaseMatches.length > 0) {
+        console.log(`Found ${supabaseMatches.length} live matches in Supabase`);
+
+        // Map Supabase matches to our format
+        const mappedMatches = supabaseMatches
+          .map(mapSupabaseMatchToLiveMatch)
+          .filter((m): m is LiveMatch => m !== null);
+
+        if (mappedMatches.length > 0) {
+          setMatches(mappedMatches);
+          setSource('supabase-live');
+          setError(null);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fall back to REST API if Supabase has no live matches
+      console.log('No live matches in Supabase, trying REST API...');
       const response = await fetch('/api/matches/live', {
         method: 'GET',
         headers: {
@@ -102,11 +139,13 @@ export function useScoreSimulator() {
       }
 
       if (apiMatches.length > 0) {
+        console.log(`Found ${apiMatches.length} matches from REST API`);
+
         // Map API matches to our format
         const mappedMatches = apiMatches
-          .map(mapApiMatchToLiveMatch)
+          .map(mapSupabaseMatchToLiveMatch)
           .filter((m): m is LiveMatch => m !== null)
-          .slice(0, 15); // Limit to 15 matches for UI performance
+          .slice(0, 15);
 
         if (mappedMatches.length > 0) {
           setMatches(mappedMatches);
@@ -123,7 +162,7 @@ export function useScoreSimulator() {
         setSource('fallback-demo');
       }
     } catch (err: any) {
-      console.warn('Failed to fetch from live API, using fallback data:', err.message);
+      console.warn('Failed to fetch live matches, using demo data:', err.message);
       setMatches(fallbackMatches);
       setError(err.message);
       setSource('fallback-demo');
