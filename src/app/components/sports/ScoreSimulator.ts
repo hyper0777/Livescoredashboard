@@ -79,27 +79,23 @@ export function useScoreSimulator() {
 
   const fetchLiveScores = useCallback(async () => {
     try {
-      // Fetch from Supabase Edge Function
-      console.log('Fetching live matches from Supabase Edge Function...');
+      // Fetch from Netlify function that proxies to Supabase Edge Function
+      console.log('Fetching live matches from API...');
 
-      const { projectId, publicAnonKey } = await import('@utils/supabase/info');
-      const supabaseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/matches/live`;
-
-      const response = await fetch(supabaseUrl, {
+      const response = await fetch('/api/matches/live', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Supabase Edge Function returned status ${response.status}`);
+        throw new Error(`API returned status ${response.status}`);
       }
 
       const data = await response.json();
 
-      // Handle different API response formats from the edge function
+      // Handle different API response formats
       let apiMatches = [];
 
       if (Array.isArray(data)) {
@@ -110,10 +106,13 @@ export function useScoreSimulator() {
         apiMatches = data.data;
       } else if (data.result && Array.isArray(data.result)) {
         apiMatches = data.result;
+      } else if (data.error || data.message) {
+        // API returned an error response
+        throw new Error(data.message || data.error);
       }
 
       if (apiMatches.length > 0) {
-        console.log(`Found ${apiMatches.length} live matches from Supabase Edge Function`);
+        console.log(`Found ${apiMatches.length} live matches from API`);
 
         // Map API matches to our format
         const mappedMatches = apiMatches
@@ -123,22 +122,23 @@ export function useScoreSimulator() {
 
         if (mappedMatches.length > 0) {
           setMatches(mappedMatches);
-          setSource('supabase-edge');
+          setSource('api-live');
           setError(null);
         } else {
           // Fallback to demo data if no matches could be mapped
-          console.log('No matches could be mapped from API response');
+          console.log('No matches could be mapped from API response, using demo data');
           setMatches(fallbackMatches);
           setSource('fallback-demo');
         }
       } else {
         // No matches in response, use fallback
-        console.log('No live matches in API response');
+        console.log('No live matches in API response, using demo data');
         setMatches(fallbackMatches);
         setSource('fallback-demo');
       }
     } catch (err: any) {
-      console.warn('Failed to fetch from Supabase Edge Function, using demo data:', err.message);
+      console.error('Failed to fetch from API:', err.message);
+      console.log('Using demo data as fallback');
       setMatches(fallbackMatches);
       setError(err.message);
       setSource('fallback-demo');
