@@ -30,7 +30,7 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/highlights/${match.id}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/highlights`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
@@ -69,7 +69,7 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
   return (
     <Card className="bg-slate-800/95 border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4">
+      <div className="bg-gradient-to-r from-[#00d4ff] to-[#0066ff] p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -95,7 +95,7 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
           <div className="text-lg font-bold">
             {match.homeTeam} vs {match.awayTeam}
           </div>
-          <div className="text-sm text-purple-100">{match.league}</div>
+          <div className="text-sm text-blue-100">{match.league}</div>
         </div>
       </div>
 
@@ -103,8 +103,8 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
       <div className="relative bg-slate-900">
         {!highlights && !loading && !error && (
           <div className="flex flex-col items-center justify-center p-12 gap-4">
-            <div className="w-20 h-20 rounded-full bg-purple-600/20 flex items-center justify-center">
-              <Film className="w-10 h-10 text-purple-500" />
+            <div className="w-20 h-20 rounded-full bg-[#00d4ff]/20 flex items-center justify-center">
+              <Film className="w-10 h-10 text-[#00d4ff]" />
             </div>
             <div className="text-center">
               <h3 className="text-xl font-semibold text-white mb-2">
@@ -116,7 +116,7 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
             </div>
             <Button
               onClick={fetchHighlights}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-[#00d4ff] hover:bg-[#00b8e6] text-white"
             >
               <Play className="w-4 h-4 mr-2" />
               Load Highlights
@@ -126,7 +126,7 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
 
         {loading && (
           <div className="flex flex-col items-center justify-center p-12 gap-4">
-            <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+            <Loader2 className="w-12 h-12 text-[#00d4ff] animate-spin" />
             <p className="text-slate-400">Loading highlights...</p>
           </div>
         )}
@@ -193,7 +193,7 @@ export function HighlightViewer({ match, onClose }: HighlightViewerProps) {
             {/* Show raw API response for debugging */}
             <div className="mt-6 bg-slate-800 rounded-lg p-4">
               <p className="text-xs text-slate-400 mb-2">API Response:</p>
-              <pre className="text-xs text-emerald-400 overflow-auto max-h-40">
+              <pre className="text-xs text-[#00d4ff] overflow-auto max-h-40">
                 {JSON.stringify(highlights, null, 2)}
               </pre>
             </div>
@@ -262,7 +262,7 @@ function HighlightCard({ title, duration, views, thumbnail, onClick }: Highlight
   return (
     <button
       onClick={onClick}
-      className="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 hover:border-purple-500/50 rounded-lg p-4 transition-all group"
+      className="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 hover:border-[#00d4ff]/50 rounded-lg p-4 transition-all group"
     >
       <div className="flex items-center gap-4">
         {/* Thumbnail */}
@@ -276,7 +276,7 @@ function HighlightCard({ title, duration, views, thumbnail, onClick }: Highlight
 
         {/* Info */}
         <div className="flex-1 text-left">
-          <h4 className="text-white font-semibold mb-1 group-hover:text-purple-400 transition-colors">
+          <h4 className="text-white font-semibold mb-1 group-hover:text-[#00d4ff] transition-colors">
             {title}
           </h4>
           <div className="flex items-center gap-3 text-xs text-slate-400">
@@ -292,7 +292,7 @@ function HighlightCard({ title, duration, views, thumbnail, onClick }: Highlight
         </div>
 
         {/* Play Icon */}
-        <div className="text-slate-500 group-hover:text-purple-500 transition-colors">
+        <div className="text-slate-500 group-hover:text-[#00d4ff] transition-colors">
           <Play className="w-6 h-6" />
         </div>
       </div>

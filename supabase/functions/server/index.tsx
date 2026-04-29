@@ -33,27 +33,27 @@ app.get("/make-server-ed1dd9fb/test-api", (c) => {
   });
 });
 
-// Fetch live matches from AllSportsAPI
+// Fetch current live football matches from Free API Live Football Data
 app.get("/make-server-ed1dd9fb/matches/live", async (c) => {
   try {
     const apiKey = Deno.env.get("RAPIDAPI_KEY");
-    
+
     if (!apiKey) {
       console.log("Error fetching live matches: RAPIDAPI_KEY environment variable not set");
       return c.json({ error: "API key not configured" }, 500);
     }
 
-    console.log("Fetching from AllSportsAPI...");
-    const response = await fetch("https://allsportsapi2.p.rapidapi.com/api/matches/live", {
+    console.log("Fetching from Free API Live Football Data...");
+    const response = await fetch("https://free-football-api-data.p.rapidapi.com/football-current-live", {
       method: "GET",
       headers: {
         "x-rapidapi-key": apiKey,
-        "x-rapidapi-host": "allsportsapi2.p.rapidapi.com",
+        "x-rapidapi-host": "free-football-api-data.p.rapidapi.com",
         "Content-Type": "application/json",
       },
     });
 
-    console.log(`AllSportsAPI response status: ${response.status}`);
+    console.log(`Free Football API response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -61,8 +61,33 @@ app.get("/make-server-ed1dd9fb/matches/live", async (c) => {
       return c.json({ error: `API request failed: ${response.status}`, details: errorText }, response.status);
     }
 
-    const data = await response.json();
-    console.log(`Successfully fetched data:`, JSON.stringify(data).substring(0, 200));
+    const contentType = response.headers.get("content-type");
+    console.log(`Response content-type: ${contentType}`);
+
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log(`Raw response (first 300 chars): ${responseText.substring(0, 300)}`);
+
+      if (contentType?.includes("application/json") || responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
+        data = JSON.parse(responseText);
+        console.log(`Successfully fetched live matches data:`, JSON.stringify(data).substring(0, 200));
+      } else {
+        console.log(`Non-JSON response received. Content type: ${contentType}`);
+        return c.json({
+          error: "Invalid API response format",
+          message: "The API returned an unexpected response format."
+        }, 200);
+      }
+    } catch (parseError) {
+      console.log(`Failed to parse response: ${parseError}`);
+      return c.json({
+        error: "Failed to parse response",
+        details: String(parseError),
+        message: "Unable to process the data. Please try again later."
+      }, 200);
+    }
+
     return c.json(data);
   } catch (error) {
     console.log(`Exception while fetching live matches: ${error}`);
@@ -100,23 +125,26 @@ app.get("/make-server-ed1dd9fb/stream/:matchSlug", async (c) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.log(`Error fetching stream link from API: ${response.status} - ${errorText}`);
-      
+
       // Return a more detailed error response
-      return c.json({ 
-        error: `Stream API request failed with status ${response.status}`, 
+      return c.json({
+        error: `Stream API request failed with status ${response.status}`,
         details: errorText,
         matchSlug: matchSlug,
         message: "Stream may not be available for this match. The Football Live Stream API might not have coverage for this specific game."
       }, 200); // Return 200 so frontend can handle gracefully
     }
 
-    const data = await response.text();
-    console.log(`Successfully fetched stream data (first 200 chars):`, data.substring(0, 200));
-    
-    return c.json({ 
+    // Read response as text first, then check format
+    const responseText = await response.text();
+    const contentType = response.headers.get("content-type");
+    console.log(`Stream response content-type: ${contentType}`);
+    console.log(`Stream response (first 300 chars):`, responseText.substring(0, 300));
+
+    return c.json({
       success: true,
-      streamData: data, 
-      matchSlug: matchSlug 
+      streamData: responseText,
+      matchSlug: matchSlug
     });
   } catch (error) {
     console.log(`Exception while fetching stream link: ${error}`);
@@ -198,22 +226,51 @@ app.get("/make-server-ed1dd9fb/highlights/:matchId", async (c) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.log(`Error fetching highlights from API: ${response.status} - ${errorText}`);
-      
-      return c.json({ 
-        error: `Highlights API request failed with status ${response.status}`, 
+
+      return c.json({
+        error: `Highlights API request failed with status ${response.status}`,
         details: errorText,
         matchId: matchId,
         message: "Highlights may not be available for this match yet."
       }, 200);
     }
 
-    const data = await response.json();
-    console.log(`Successfully fetched highlights data:`, JSON.stringify(data).substring(0, 200));
-    
-    return c.json({ 
+    // Try to parse as JSON, but handle non-JSON responses
+    const contentType = response.headers.get("content-type");
+    console.log(`Response content-type: ${contentType}`);
+
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log(`Raw response (first 300 chars): ${responseText.substring(0, 300)}`);
+
+      // Check if response looks like JSON
+      if (contentType?.includes("application/json") || responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
+        data = JSON.parse(responseText);
+        console.log(`Successfully parsed highlights JSON:`, JSON.stringify(data).substring(0, 200));
+      } else {
+        // Non-JSON response (HTML, plain text, etc.)
+        console.log(`Non-JSON response received. Content type: ${contentType}`);
+        return c.json({
+          error: "Invalid API response format",
+          message: "The highlights API returned an unexpected response format. Highlights may not be available for this match.",
+          matchId: matchId
+        }, 200);
+      }
+    } catch (parseError) {
+      console.log(`Failed to parse highlights response: ${parseError}`);
+      return c.json({
+        error: "Failed to parse highlights response",
+        details: String(parseError),
+        message: "Unable to process the highlights data. Please try again later.",
+        matchId: matchId
+      }, 200);
+    }
+
+    return c.json({
       success: true,
-      highlights: data, 
-      matchId: matchId 
+      highlights: data,
+      matchId: matchId
     });
   } catch (error) {
     console.log(`Exception while fetching highlights: ${error}`);
@@ -225,44 +282,242 @@ app.get("/make-server-ed1dd9fb/highlights/:matchId", async (c) => {
   }
 });
 
-// Fetch all available highlights
+// Fetch all available highlights from Free API Live Football Data
 app.get("/make-server-ed1dd9fb/highlights", async (c) => {
   try {
     const apiKey = Deno.env.get("RAPIDAPI_KEY");
-    
+
     if (!apiKey) {
       console.log("Error fetching highlights list: RAPIDAPI_KEY environment variable not set");
       return c.json({ error: "API key not configured" }, 500);
     }
 
-    console.log("Fetching finished matches for highlights...");
-    
-    // Get finished matches from AllSportsAPI
-    const matchesResponse = await fetch("https://allsportsapi2.p.rapidapi.com/api/matches/live", {
+    console.log("Fetching football event highlights from Free API Live Football Data...");
+
+    const response = await fetch("https://free-football-api-data.p.rapidapi.com/football-event-highlights", {
       method: "GET",
       headers: {
         "x-rapidapi-key": apiKey,
-        "x-rapidapi-host": "allsportsapi2.p.rapidapi.com",
+        "x-rapidapi-host": "free-football-api-data.p.rapidapi.com",
         "Content-Type": "application/json",
       },
     });
 
-    if (!matchesResponse.ok) {
-      console.log(`Error fetching matches for highlights: ${matchesResponse.status}`);
-      return c.json({ error: "Failed to fetch matches" }, matchesResponse.status);
+    console.log(`Free Football API highlights response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`Error fetching highlights from API: ${response.status} - ${errorText}`);
+      return c.json({
+        error: `Highlights API request failed with status ${response.status}`,
+        details: errorText,
+        message: "Highlights may not be available at this time."
+      }, 200);
     }
 
-    const matchesData = await matchesResponse.json();
-    console.log(`Found matches data for highlights:`, JSON.stringify(matchesData).substring(0, 200));
-    
-    return c.json({ 
+    const contentType = response.headers.get("content-type");
+    console.log(`Highlights response content-type: ${contentType}`);
+
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log(`Highlights raw response (first 300 chars): ${responseText.substring(0, 300)}`);
+
+      if (contentType?.includes("application/json") || responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
+        data = JSON.parse(responseText);
+        console.log(`Successfully parsed highlights JSON:`, JSON.stringify(data).substring(0, 200));
+      } else {
+        console.log(`Non-JSON response received. Content type: ${contentType}`);
+        return c.json({
+          error: "Invalid API response format",
+          message: "The highlights API returned an unexpected response format.",
+        }, 200);
+      }
+    } catch (parseError) {
+      console.log(`Failed to parse highlights response: ${parseError}`);
+      return c.json({
+        error: "Failed to parse highlights response",
+        details: String(parseError),
+        message: "Unable to process the highlights data. Please try again later."
+      }, 200);
+    }
+
+    return c.json({
       success: true,
-      matches: matchesData,
-      note: "Use /highlights/:matchId endpoint to get specific match highlights"
+      highlights: data,
     });
   } catch (error) {
     console.log(`Exception while fetching highlights list: ${error}`);
     return c.json({ error: "Failed to fetch highlights list", details: String(error) }, 500);
+  }
+});
+
+// Fetch league standings
+app.get("/make-server-ed1dd9fb/standings/:leagueId", async (c) => {
+  try {
+    const apiKey = Deno.env.get("RAPIDAPI_KEY");
+
+    if (!apiKey) {
+      console.log("Error fetching standings: RAPIDAPI_KEY environment variable not set");
+      return c.json({ error: "API key not configured" }, 500);
+    }
+
+    const leagueId = c.req.param("leagueId");
+    console.log(`Fetching standings for league ID: ${leagueId}`);
+
+    const url = `https://free-api-live-football-data.p.rapidapi.com/football-get-standing-all?leagueid=${leagueId}`;
+    console.log(`Standings API URL: ${url}`);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": "free-api-live-football-data.p.rapidapi.com",
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Free API Live Football Data response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`Error fetching standings from API: ${response.status} - ${errorText}`);
+
+      return c.json({
+        error: `Standings API request failed with status ${response.status}`,
+        details: errorText,
+        leagueId: leagueId,
+        message: "Standings may not be available for this league."
+      }, 200);
+    }
+
+    // Try to parse as JSON, but handle non-JSON responses
+    const contentType = response.headers.get("content-type");
+    console.log(`Standings response content-type: ${contentType}`);
+
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log(`Standings raw response (first 300 chars): ${responseText.substring(0, 300)}`);
+
+      // Check if response looks like JSON
+      if (contentType?.includes("application/json") || responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
+        data = JSON.parse(responseText);
+        console.log(`Successfully parsed standings JSON:`, JSON.stringify(data).substring(0, 200));
+      } else {
+        // Non-JSON response (HTML, plain text, etc.)
+        console.log(`Non-JSON response received. Content type: ${contentType}`);
+        return c.json({
+          error: "Invalid API response format",
+          message: "The standings API returned an unexpected response format. Standings may not be available for this league.",
+          leagueId: leagueId
+        }, 200);
+      }
+    } catch (parseError) {
+      console.log(`Failed to parse standings response: ${parseError}`);
+      return c.json({
+        error: "Failed to parse standings response",
+        details: String(parseError),
+        message: "Unable to process the standings data. Please try again later.",
+        leagueId: leagueId
+      }, 200);
+    }
+
+    return c.json({
+      success: true,
+      standings: data,
+      leagueId: leagueId
+    });
+  } catch (error) {
+    console.log(`Exception while fetching standings: ${error}`);
+    return c.json({
+      error: "Failed to fetch standings",
+      details: String(error),
+      message: "An error occurred while trying to fetch standings. Please try again later."
+    }, 200);
+  }
+});
+
+// Fetch football event detail by event ID
+app.get("/make-server-ed1dd9fb/event/:eventId", async (c) => {
+  try {
+    const apiKey = Deno.env.get("RAPIDAPI_KEY");
+
+    if (!apiKey) {
+      console.log("Error fetching event detail: RAPIDAPI_KEY environment variable not set");
+      return c.json({ error: "API key not configured" }, 500);
+    }
+
+    const eventId = c.req.param("eventId");
+    console.log(`Fetching event detail for event ID: ${eventId}`);
+
+    const url = `https://free-football-api-data.p.rapidapi.com/football-event-detail?eventid=${eventId}`;
+    console.log(`Event detail API URL: ${url}`);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": "free-football-api-data.p.rapidapi.com",
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Free Football API event detail response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`Error fetching event detail from API: ${response.status} - ${errorText}`);
+
+      return c.json({
+        error: `Event detail API request failed with status ${response.status}`,
+        details: errorText,
+        eventId: eventId,
+        message: "Event details may not be available."
+      }, 200);
+    }
+
+    const contentType = response.headers.get("content-type");
+    console.log(`Event detail response content-type: ${contentType}`);
+
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log(`Event detail raw response (first 300 chars): ${responseText.substring(0, 300)}`);
+
+      if (contentType?.includes("application/json") || responseText.trim().startsWith("{") || responseText.trim().startsWith("[")) {
+        data = JSON.parse(responseText);
+        console.log(`Successfully parsed event detail JSON:`, JSON.stringify(data).substring(0, 200));
+      } else {
+        console.log(`Non-JSON response received. Content type: ${contentType}`);
+        return c.json({
+          error: "Invalid API response format",
+          message: "The event detail API returned an unexpected response format.",
+          eventId: eventId
+        }, 200);
+      }
+    } catch (parseError) {
+      console.log(`Failed to parse event detail response: ${parseError}`);
+      return c.json({
+        error: "Failed to parse event detail response",
+        details: String(parseError),
+        message: "Unable to process the event detail data. Please try again later.",
+        eventId: eventId
+      }, 200);
+    }
+
+    return c.json({
+      success: true,
+      event: data,
+      eventId: eventId
+    });
+  } catch (error) {
+    console.log(`Exception while fetching event detail: ${error}`);
+    return c.json({
+      error: "Failed to fetch event detail",
+      details: String(error),
+      message: "An error occurred while trying to fetch event details. Please try again later."
+    }, 200);
   }
 });
 

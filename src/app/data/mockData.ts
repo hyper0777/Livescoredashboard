@@ -24,6 +24,71 @@ export interface Standing {
   points: number;
 }
 
+export interface NewsArticle {
+  id: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  author: string;
+  time: string;
+  readTime: string;
+  image: string;
+}
+
+export const mockNewsArticles: NewsArticle[] = [
+  {
+    id: '1',
+    title: 'Manchester City Dominates in Champions League Thriller',
+    excerpt: 'In a spectacular display of attacking football, Manchester City secured a commanding 4-1 victory over their European rivals.',
+    category: 'Champions League',
+    author: 'John Smith',
+    time: '2 hours ago',
+    readTime: '5 min read',
+    image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80'
+  },
+  {
+    id: '2',
+    title: 'Transfer Window: Liverpool Eyes Star Midfielder',
+    excerpt: 'Liverpool is reportedly preparing a record-breaking bid for the talented midfielder as they look to strengthen their squad.',
+    category: 'Transfer News',
+    author: 'Sarah Johnson',
+    time: '4 hours ago',
+    readTime: '3 min read',
+    image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80'
+  },
+  {
+    id: '3',
+    title: 'Arsenal Extends Winning Streak to Seven Matches',
+    excerpt: 'The Gunners continue their impressive form with another convincing victory, solidifying their position at the top of the table.',
+    category: 'Premier League',
+    author: 'Mike Williams',
+    time: '6 hours ago',
+    readTime: '4 min read',
+    image: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80'
+  },
+  {
+    id: '4',
+    title: 'Chelsea Manager Discusses Squad Rotation Strategy',
+    excerpt: 'With a packed fixture schedule ahead, the manager reveals his plans for managing player workload and maintaining performance.',
+    category: 'Team News',
+    author: 'Emma Davis',
+    time: '8 hours ago',
+    readTime: '6 min read',
+    image: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=80'
+  },
+  {
+    id: '5',
+    title: 'Barcelona Youngster Scores Hat-Trick on Debut',
+    excerpt: 'The 19-year-old sensation announced himself on the big stage with a remarkable three-goal performance that has fans excited.',
+    category: 'La Liga',
+    author: 'Carlos Rodriguez',
+    time: '10 hours ago',
+    readTime: '4 min read',
+    image: 'https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=800&q=80'
+  }
+];
+
+
 export const footballMatches: Match[] = [
   {
     id: 'f1',

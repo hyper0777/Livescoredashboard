@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { Filter, ArrowUpDown } from 'lucide-react';
 import { LiveMatch, Sport } from '@/data/sportsData';
 import LiveScoreCard from './LiveScoreCard';
-import { useMatches } from "@/app/hooks/useMatches";
 
 interface LiveScoresProps {
   matches: LiveMatch[];
