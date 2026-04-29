@@ -39,15 +39,15 @@ const AppLayout: React.FC = () => {
               <Loader2 className="w-3 h-3 animate-spin" />
               Fetching live data...
             </span>
-          ) : source === 'supabase-live' ? (
+          ) : source === 'supabase-edge' ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400">
               <Database className="w-3 h-3" />
-              Supabase Live Data
+              Supabase Edge Function
             </span>
           ) : source === 'api-live' ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400">
               <Wifi className="w-3 h-3" />
-              REST API Data
+              Live API Data
             </span>
           ) : source === 'fallback-demo' ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-[#00d4ff]/10 border border-[#00d4ff]/20 rounded-full text-[#00d4ff]">

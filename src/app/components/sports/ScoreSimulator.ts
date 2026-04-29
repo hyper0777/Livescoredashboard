@@ -79,53 +79,27 @@ export function useScoreSimulator() {
 
   const fetchLiveScores = useCallback(async () => {
     try {
-      // Try to fetch from Supabase first
-      console.log('Attempting to fetch live matches from Supabase...');
+      // Fetch from Supabase Edge Function
+      console.log('Fetching live matches from Supabase Edge Function...');
 
-      const { data: supabaseMatches, error: supabaseError } = await supabase
-        .from('live_matches')
-        .select('*')
-        .eq('status', 'live')
-        .limit(15);
+      const { projectId, publicAnonKey } = await import('@utils/supabase/info');
+      const supabaseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/matches/live`;
 
-      if (supabaseError) {
-        console.warn('Supabase error:', supabaseError.message);
-        throw new Error(`Supabase: ${supabaseError.message}`);
-      }
-
-      if (supabaseMatches && supabaseMatches.length > 0) {
-        console.log(`Found ${supabaseMatches.length} live matches in Supabase`);
-
-        // Map Supabase matches to our format
-        const mappedMatches = supabaseMatches
-          .map(mapSupabaseMatchToLiveMatch)
-          .filter((m): m is LiveMatch => m !== null);
-
-        if (mappedMatches.length > 0) {
-          setMatches(mappedMatches);
-          setSource('supabase-live');
-          setError(null);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Fall back to REST API if Supabase has no live matches
-      console.log('No live matches in Supabase, trying REST API...');
-      const response = await fetch('/api/matches/live', {
+      const response = await fetch(supabaseUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${publicAnonKey}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`API returned status ${response.status}`);
+        throw new Error(`Supabase Edge Function returned status ${response.status}`);
       }
 
       const data = await response.json();
 
-      // Handle different API response formats
+      // Handle different API response formats from the edge function
       let apiMatches = [];
 
       if (Array.isArray(data)) {
@@ -139,7 +113,7 @@ export function useScoreSimulator() {
       }
 
       if (apiMatches.length > 0) {
-        console.log(`Found ${apiMatches.length} matches from REST API`);
+        console.log(`Found ${apiMatches.length} live matches from Supabase Edge Function`);
 
         // Map API matches to our format
         const mappedMatches = apiMatches
@@ -149,20 +123,22 @@ export function useScoreSimulator() {
 
         if (mappedMatches.length > 0) {
           setMatches(mappedMatches);
-          setSource('api-live');
+          setSource('supabase-edge');
           setError(null);
         } else {
           // Fallback to demo data if no matches could be mapped
+          console.log('No matches could be mapped from API response');
           setMatches(fallbackMatches);
           setSource('fallback-demo');
         }
       } else {
         // No matches in response, use fallback
+        console.log('No live matches in API response');
         setMatches(fallbackMatches);
         setSource('fallback-demo');
       }
     } catch (err: any) {
-      console.warn('Failed to fetch live matches, using demo data:', err.message);
+      console.warn('Failed to fetch from Supabase Edge Function, using demo data:', err.message);
       setMatches(fallbackMatches);
       setError(err.message);
       setSource('fallback-demo');
