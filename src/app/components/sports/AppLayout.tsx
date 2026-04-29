@@ -39,26 +39,26 @@ const AppLayout: React.FC = () => {
               <Loader2 className="w-3 h-3 animate-spin" />
               Fetching live data...
             </span>
-          ) : source === 'api-football' ? (
+          ) : source === 'api-live' ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400">
               <Wifi className="w-3 h-3" />
               Live API Data
             </span>
-          ) : source.includes('simulated') ? (
+          ) : source === 'fallback-demo' ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-[#00d4ff]/10 border border-[#00d4ff]/20 rounded-full text-[#00d4ff]">
               <Radio className="w-3 h-3" />
-              Simulated Live Data
+              Demo Data (API unavailable)
             </span>
           ) : (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400">
               <Database className="w-3 h-3" />
-              Edge Function: {source}
+              {source}
             </span>
           )}
           {error && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 ml-2">
               <WifiOff className="w-3 h-3" />
-              API unavailable - using fallback
+              {error.split(':')[0]}
             </span>
           )}
           <span className="text-gray-600 ml-auto">Auto-refreshes every 30s</span>
