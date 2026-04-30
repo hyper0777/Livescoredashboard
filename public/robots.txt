@@ -1,0 +1,21 @@
+# ScoreHub Robots File
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /private
+Disallow: /*.json$
+Disallow: /*.xml$
+
+# Allow specific crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Sitemap
+Sitemap: https://livescoresgames.netlify.app/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
