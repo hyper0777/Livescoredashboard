@@ -98,7 +98,23 @@ export function useScoreSimulator() {
       if (!response.ok) {
         const errorData = await response.text();
         console.error(`Edge function error ${response.status}:`, errorData);
-        throw new Error(`Edge function returned status ${response.status}`);
+
+        // Parse error to check if it's a quota/usage issue
+        const errorInfo = errorData;
+        let userFriendlyError = '';
+
+        if (response.status === 503 || errorData.includes('usage_exceeded')) {
+          userFriendlyError = 'API usage limit exceeded - displaying demo data';
+          console.warn('RapidAPI usage exceeded. Please upgrade your API plan or wait for reset.');
+        } else if (response.status === 429) {
+          userFriendlyError = 'API rate limit exceeded - displaying demo data';
+        } else if (response.status >= 500) {
+          userFriendlyError = 'API temporarily unavailable - displaying demo data';
+        } else {
+          userFriendlyError = 'Failed to fetch live data - displaying demo data';
+        }
+
+        throw new Error(userFriendlyError);
       }
 
       const data = await response.json();
@@ -118,7 +134,12 @@ export function useScoreSimulator() {
       } else if (data.error || data.message) {
         // API returned an error response
         console.warn('API returned error:', data.message || data.error);
-        throw new Error(data.message || data.error);
+
+        // Check for usage/quota issues
+        if (data.error?.includes('usage') || data.message?.includes('usage')) {
+          throw new Error('API usage limit exceeded - displaying demo data');
+        }
+        throw new Error(data.message || data.error || 'API returned an error');
       }
 
       if (apiMatches.length > 0) {

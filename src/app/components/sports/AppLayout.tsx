@@ -52,7 +52,7 @@ const AppLayout: React.FC = () => {
           ) : source === 'fallback-demo' ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-[#00d4ff]/10 border border-[#00d4ff]/20 rounded-full text-[#00d4ff]">
               <Radio className="w-3 h-3" />
-              Demo Data
+              Demo Data {error && `(${error.split(' - ')[0]})`}
             </span>
           ) : (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400">
