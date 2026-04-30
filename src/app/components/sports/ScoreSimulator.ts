@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { LiveMatch, liveMatches as fallbackMatches } from '@/data/sportsData';
-import { supabase } from '@/lib/supabase';
 
 const POLL_INTERVAL = 30000; // Poll every 30 seconds
 
@@ -79,21 +78,31 @@ export function useScoreSimulator() {
 
   const fetchLiveScores = useCallback(async () => {
     try {
-      // Fetch from Netlify function that proxies to Supabase Edge Function
-      console.log('Fetching live matches from API...');
+      // Fetch from Supabase Edge Function
+      console.log('Fetching live matches from Supabase Edge Function...');
 
-      const response = await fetch('/api/matches/live', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const { projectId, publicAnonKey } = await import('@utils/supabase/info');
+
+      // Call Supabase Edge Function directly
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-ed1dd9fb/matches/live`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`API returned status ${response.status}`);
+        const errorData = await response.text();
+        console.error(`Edge function error ${response.status}:`, errorData);
+        throw new Error(`Edge function returned status ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Edge function response:', data);
 
       // Handle different API response formats
       let apiMatches = [];
@@ -108,11 +117,12 @@ export function useScoreSimulator() {
         apiMatches = data.result;
       } else if (data.error || data.message) {
         // API returned an error response
+        console.warn('API returned error:', data.message || data.error);
         throw new Error(data.message || data.error);
       }
 
       if (apiMatches.length > 0) {
-        console.log(`Found ${apiMatches.length} live matches from API`);
+        console.log(`Found ${apiMatches.length} live matches from Supabase Edge Function`);
 
         // Map API matches to our format
         const mappedMatches = apiMatches
@@ -122,22 +132,22 @@ export function useScoreSimulator() {
 
         if (mappedMatches.length > 0) {
           setMatches(mappedMatches);
-          setSource('api-live');
+          setSource('supabase-edge');
           setError(null);
         } else {
           // Fallback to demo data if no matches could be mapped
-          console.log('No matches could be mapped from API response, using demo data');
+          console.log('No matches could be mapped from Edge Function response, using demo data');
           setMatches(fallbackMatches);
           setSource('fallback-demo');
         }
       } else {
         // No matches in response, use fallback
-        console.log('No live matches in API response, using demo data');
+        console.log('No live matches in Edge Function response, using demo data');
         setMatches(fallbackMatches);
         setSource('fallback-demo');
       }
     } catch (err: any) {
-      console.error('Failed to fetch from API:', err.message);
+      console.error('Failed to fetch from Supabase Edge Function:', err.message);
       console.log('Using demo data as fallback');
       setMatches(fallbackMatches);
       setError(err.message);
