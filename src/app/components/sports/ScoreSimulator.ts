@@ -71,7 +71,7 @@ function generateColorForTeam(teamName: string): string {
 
 export function useScoreSimulator() {
   const [matches, setMatches] = useState<LiveMatch[]>(fallbackMatches);
-  const [source, setSource] = useState<string>('local');
+  const [source, setSource] = useState<string>('loading');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
