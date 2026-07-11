@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Play, Zap } from 'lucide-react';
+import React from 'react';
+import { Zap, Calendar } from 'lucide-react';
 import { LiveMatch } from '@/data/sportsData';
 
 interface HeroProps {
@@ -8,185 +8,518 @@ interface HeroProps {
 }
 
 const HeroSection: React.FC<HeroProps> = ({ featuredMatches, onMatchClick }) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const liveMatches = featuredMatches.filter(m => m.status === 'live');
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % Math.max(liveMatches.length, 1));
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [liveMatches.length]);
-
-  const currentMatch = liveMatches[currentSlide] || featuredMatches[0];
+  const currentMatch = liveMatches[0] || featuredMatches[0];
+  const liveCount = liveMatches.length;
 
   return (
-    <section className="relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <img
-          src="https://d64gsuwffb70l.cloudfront.net/69a9d92741a5bbac0cda4aca_1772738952946_74c79b62.png"
-          alt="Sports action"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0d1117] via-[#0d1117]/90 to-[#0d1117]/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117] via-transparent to-transparent" />
-      </div>
+    <section className="hero-section">
+      {/* Ambient Glow Effects */}
+      <div className="hero-glow-top" />
+      <div className="hero-glow-bottom" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Left content */}
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-full mb-6">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-red-400 text-xs font-semibold tracking-wider uppercase">Live Now</span>
-              <span className="text-gray-400 text-xs">{liveMatches.length} matches</span>
-            </div>
-
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
-              Every Score.{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d4ff] to-[#00ff88]">
-                Every Moment.
-              </span>
-            </h2>
-            <p className="text-gray-400 text-lg mb-8 max-w-lg">
-              Real-time scores, stats, and highlights from every major league. Never miss a play.
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => {
-                  document.getElementById('live-scores')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-6 py-3 bg-gradient-to-r from-[#00d4ff] to-[#0066ff] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#00d4ff]/25 transition-all flex items-center gap-2"
-              >
-                <Zap className="w-4 h-4" />
-                Live Scores
-              </button>
-              <button
-                onClick={() => {
-                  document.getElementById('upcoming')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-6 py-3 bg-white/10 border border-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-all flex items-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                Upcoming
-              </button>
-            </div>
+      {/* Main Content Grid */}
+      <div className="hero-container">
+        {/* LEFT SIDE: Marketing Content */}
+        <div className="hero-content">
+          {/* Live Tagline Badge */}
+          <div className="live-badge">
+            <span className="live-dot" />
+            <span>{liveCount} Matches Live Now</span>
           </div>
 
-          {/* Right - Featured match card */}
-          {currentMatch && (
-            <div
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 cursor-pointer hover:border-[#00d4ff]/30 transition-all group"
-              onClick={() => onMatchClick(currentMatch)}
+          {/* Main Headline */}
+          <h1 className="hero-title">
+            Every Score. <br />
+            <span className="hero-title-gradient">Every Moment.</span>
+          </h1>
+
+          {/* Description */}
+          <p className="hero-description">
+            Real-time scores, stats, and highlights from every major league. Never miss a play, prediction, or payout.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="hero-buttons">
+            <button
+              onClick={() => document.getElementById('live-scores')?.scrollIntoView({ behavior: 'smooth' })}
+              className="cta-primary"
             >
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{currentMatch.league}</span>
-                <div className="flex items-center gap-2">
-                  {currentMatch.status === 'live' && (
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/20 rounded-full">
-                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-red-400 text-xs font-bold">LIVE</span>
-                    </span>
-                  )}
-                  <span className="text-[#00d4ff] text-sm font-mono font-bold">{currentMatch.time}</span>
-                </div>
+              <Zap className="w-4 h-4" />
+              Live Scores
+            </button>
+            <button
+              onClick={() => document.getElementById('upcoming')?.scrollIntoView({ behavior: 'smooth' })}
+              className="cta-secondary"
+            >
+              <Calendar className="w-4 h-4" />
+              Upcoming
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE: Feature Card */}
+        {currentMatch && (
+          <div className="hero-card-wrapper">
+            <div className="hero-card-glow" />
+            <div className="hero-card" onClick={() => onMatchClick(currentMatch)}>
+              {/* Card Header */}
+              <div className="hero-card-header">
+                <span className="hero-card-league">{currentMatch.league} • {currentMatch.sport}</span>
+                <span className="hero-card-status">
+                  <span className="hero-status-dot" />
+                  {currentMatch.time}
+                </span>
               </div>
 
-              <div className="flex items-center justify-between gap-4">
-                {/* Home team */}
-                <div className="flex-1 text-center">
+              {/* Score Grid */}
+              <div className="hero-score-grid">
+                {/* Away Team */}
+                <div className="hero-team">
                   <div
-                    className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-white font-black text-xl mb-3 shadow-lg"
-                    style={{ backgroundColor: currentMatch.homeColor }}
-                  >
-                    {currentMatch.homeAbbr}
-                  </div>
-                  <p className="text-white font-semibold text-sm">{currentMatch.homeTeam}</p>
-                </div>
-
-                {/* Score */}
-                <div className="text-center px-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl sm:text-5xl font-black text-white tabular-nums">{currentMatch.homeScore}</span>
-                    <span className="text-2xl text-gray-600 font-light">-</span>
-                    <span className="text-4xl sm:text-5xl font-black text-white tabular-nums">{currentMatch.awayScore}</span>
-                  </div>
-                  <p className="text-gray-500 text-xs mt-2 uppercase tracking-wider">{currentMatch.sport}</p>
-                </div>
-
-                {/* Away team */}
-                <div className="flex-1 text-center">
-                  <div
-                    className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-white font-black text-xl mb-3 shadow-lg"
+                    className="hero-team-badge"
                     style={{ backgroundColor: currentMatch.awayColor }}
                   >
                     {currentMatch.awayAbbr}
                   </div>
-                  <p className="text-white font-semibold text-sm">{currentMatch.awayTeam}</p>
+                  <p className="hero-team-name">{currentMatch.awayTeam}</p>
+                </div>
+
+                {/* Live Score */}
+                <div className="hero-score">
+                  <div className="hero-score-display">
+                    <span>{currentMatch.awayScore}</span>
+                    <span className="hero-score-separator">-</span>
+                    <span className="hero-score-highlight">{currentMatch.homeScore}</span>
+                  </div>
+                  <span className="hero-score-label">Live View</span>
+                </div>
+
+                {/* Home Team */}
+                <div className="hero-team">
+                  <div
+                    className="hero-team-badge"
+                    style={{ backgroundColor: currentMatch.homeColor }}
+                  >
+                    {currentMatch.homeAbbr}
+                  </div>
+                  <p className="hero-team-name">{currentMatch.homeTeam}</p>
                 </div>
               </div>
 
-              {/* Slide indicators */}
-              <div className="flex items-center justify-center gap-2 mt-6">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentSlide((prev) => (prev - 1 + liveMatches.length) % liveMatches.length);
-                  }}
-                  className="p-1 text-gray-500 hover:text-white transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                {liveMatches.slice(0, 5).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentSlide(i);
-                    }}
-                    className={`h-1.5 rounded-full transition-all ${
-                      i === currentSlide ? 'w-6 bg-[#00d4ff]' : 'w-1.5 bg-gray-600 hover:bg-gray-400'
-                    }`}
-                  />
-                ))}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentSlide((prev) => (prev + 1) % liveMatches.length);
-                  }}
-                  className="p-1 text-gray-500 hover:text-white transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+              {/* Carousel Pager */}
+              <div className="hero-carousel-pager">
+                <span className="hero-pager-dot inactive" />
+                <span className="hero-pager-dot active" />
+                <span className="hero-pager-dot inactive" />
+                <span className="hero-pager-dot inactive" />
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Live ticker strip */}
-        <div className="mt-10 overflow-hidden">
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {liveMatches.map((match) => (
-              <button
-                key={match.id}
-                onClick={() => onMatchClick(match)}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all ${
-                  match.id === currentMatch?.id
-                    ? 'bg-[#00d4ff]/10 border-[#00d4ff]/30'
-                    : 'bg-white/5 border-white/5 hover:border-white/20'
-                }`}
-              >
-                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
-                <span className="text-xs text-gray-400 font-medium">{match.homeAbbr}</span>
-                <span className="text-sm font-bold text-white tabular-nums">{match.homeScore} - {match.awayScore}</span>
-                <span className="text-xs text-gray-400 font-medium">{match.awayAbbr}</span>
-              </button>
-            ))}
           </div>
-        </div>
+        )}
       </div>
+
+      <style jsx>{`
+        .hero-section {
+          position: relative;
+          overflow: hidden;
+          background-color: rgb(3, 7, 18);
+          padding: 4rem 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+          .hero-section {
+            padding: 6rem 3rem;
+          }
+        }
+
+        .hero-section::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background-color: rgb(17, 24, 39);
+        }
+
+        /* Ambient Glow Effects */
+        .hero-glow-top {
+          position: absolute;
+          top: -10rem;
+          left: -10rem;
+          width: 37.5rem;
+          height: 37.5rem;
+          border-radius: 50%;
+          background-color: rgb(34, 211, 238, 0.1);
+          filter: blur(120px);
+          pointer-events: none;
+        }
+
+        .hero-glow-bottom {
+          position: absolute;
+          bottom: -10rem;
+          right: 0;
+          width: 31.25rem;
+          height: 31.25rem;
+          border-radius: 50%;
+          background-color: rgb(37, 99, 235, 0.05);
+          filter: blur(100px);
+          pointer-events: none;
+        }
+
+        /* Main Container */
+        .hero-container {
+          max-width: 80rem;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 3rem;
+          align-items: center;
+          position: relative;
+          z-index: 10;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-container {
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+          }
+        }
+
+        /* LEFT SIDE: Content */
+        .hero-content {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          text-align: left;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-content {
+            grid-column: span 1;
+          }
+        }
+
+        /* Live Badge */
+        .live-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+          background-color: rgb(244, 63, 94, 0.1);
+          border: 1px solid rgb(244, 63, 94, 0.2);
+          color: rgb(251, 113, 133);
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          width: fit-content;
+        }
+
+        .live-dot {
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: 50%;
+          background-color: rgb(244, 63, 94);
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+
+        /* Title */
+        .hero-title {
+          font-size: 2.25rem;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+          color: white;
+          line-height: 1.1;
+        }
+
+        @media (min-width: 768px) {
+          .hero-title {
+            font-size: 3rem;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .hero-title {
+            font-size: 3.75rem;
+          }
+        }
+
+        .hero-title-gradient {
+          background: linear-gradient(to right, rgb(34, 211, 238), rgb(96, 165, 250), rgb(99, 102, 241));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        /* Description */
+        .hero-description {
+          color: rgb(156, 163, 175);
+          font-size: 1rem;
+          font-weight: 500;
+          line-height: 1.625;
+          max-width: 31.25rem;
+        }
+
+        @media (min-width: 768px) {
+          .hero-description {
+            font-size: 1.125rem;
+          }
+        }
+
+        /* CTA Buttons */
+        .hero-buttons {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          padding-top: 0.5rem;
+        }
+
+        .cta-primary {
+          padding: 0.75rem 1.5rem;
+          background: linear-gradient(to right, rgb(34, 211, 238), rgb(37, 99, 235));
+          color: white;
+          font-weight: 700;
+          font-size: 0.875rem;
+          border-radius: 0.75rem;
+          box-shadow: 0 20px 25px -5px rgb(34, 211, 238, 0.2);
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          border: none;
+          cursor: pointer;
+        }
+
+        .cta-primary:hover {
+          background: linear-gradient(to right, rgb(34, 211, 238, 0.9), rgb(37, 99, 235, 0.9));
+          transform: translateY(-2px);
+        }
+
+        .cta-secondary {
+          padding: 0.75rem 1.5rem;
+          background-color: rgb(17, 24, 39);
+          border: 1px solid rgb(31, 41, 55);
+          color: rgb(209, 213, 219);
+          font-weight: 700;
+          font-size: 0.875rem;
+          border-radius: 0.75rem;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+        }
+
+        .cta-secondary:hover {
+          border-color: rgb(55, 65, 81);
+          background-color: rgb(31, 41, 55);
+          color: white;
+          transform: translateY(-2px);
+        }
+
+        /* RIGHT SIDE: Feature Card */
+        .hero-card-wrapper {
+          display: flex;
+          justify-content: center;
+          position: relative;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-card-wrapper {
+            justify-content: flex-end;
+          }
+        }
+
+        .hero-card-wrapper-inner {
+          width: 100%;
+          max-width: 28rem;
+          position: relative;
+        }
+
+        .hero-card-glow {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to right, rgb(34, 211, 238), rgb(37, 99, 235));
+          border-radius: 1rem;
+          opacity: 0.2;
+          filter: blur(1rem);
+          transition: opacity 0.3s;
+          z-index: 0;
+        }
+
+        .hero-card-wrapper:hover .hero-card-glow {
+          opacity: 0.3;
+        }
+
+        .hero-card {
+          position: relative;
+          background-color: rgb(17, 24, 39);
+          border: 1px solid rgb(31, 41, 55, 0.8);
+          border-radius: 1rem;
+          padding: 1.5rem;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(0.5rem);
+          cursor: pointer;
+          transition: all 0.3s;
+          z-index: 1;
+        }
+
+        /* Card Header */
+        .hero-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .hero-card-league {
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          color: rgb(107, 114, 128);
+          text-transform: uppercase;
+        }
+
+        .hero-card-status {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.25rem 0.625rem;
+          border-radius: 0.375rem;
+          background-color: rgb(244, 63, 94, 0.1);
+          border: 1px solid rgb(244, 63, 94, 0.2);
+          color: rgb(251, 113, 133);
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .hero-status-dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+          background-color: rgb(244, 63, 94);
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Score Grid */
+        .hero-score-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          align-items: center;
+          gap: 0.5rem;
+          margin: 1rem 0;
+        }
+
+        /* Team */
+        .hero-team {
+          grid-column: span 2;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .hero-team-badge {
+          width: 3.5rem;
+          height: 3.5rem;
+          border-radius: 0.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 900;
+          font-size: 1.125rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+          margin: 0 auto;
+          color: white;
+        }
+
+        .hero-team-name {
+          font-weight: 700;
+          font-size: 0.875rem;
+          color: rgb(229, 231, 235);
+          letter-spacing: -0.01em;
+          white-space: nowrap;
+        }
+
+        /* Score */
+        .hero-score {
+          grid-column: span 3;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .hero-score-display {
+          font-size: 1.875rem;
+          font-weight: 900;
+          letter-spacing: 0.1em;
+          color: white;
+          display: flex;
+          justify-content: center;
+          gap: 0.75rem;
+        }
+
+        .hero-score-separator {
+          color: rgb(75, 85, 99);
+          font-weight: 500;
+          font-size: 1.25rem;
+          align-self: center;
+        }
+
+        .hero-score-highlight {
+          color: rgb(34, 211, 238);
+        }
+
+        .hero-score-label {
+          font-size: 0.625rem;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: rgb(107, 114, 128);
+          letter-spacing: 0.05em;
+        }
+
+        /* Carousel Pager */
+        .hero-carousel-pager {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 0.375rem;
+          margin-top: 1.5rem;
+          padding-top: 1rem;
+          border-top: 1px solid rgb(31, 41, 55, 0.6);
+        }
+
+        .hero-pager-dot {
+          height: 0.375rem;
+          border-radius: 50%;
+          transition: all 0.3s;
+        }
+
+        .hero-pager-dot.inactive {
+          width: 0.375rem;
+          background-color: rgb(55, 65, 81);
+        }
+
+        .hero-pager-dot.active {
+          width: 0.75rem;
+          background-color: rgb(34, 211, 238);
+        }
+      `}</style>
     </section>
   );
 };
